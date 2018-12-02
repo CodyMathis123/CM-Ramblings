@@ -5,9 +5,6 @@
 .DESCRIPTION
     Script will create a scheduled task with the specified duration and recurrance interval to invoke CM Client Actions on a machine. This is to help expedite a machine receiving all needed policies/applications/updates from SCCM.
 
-.PARAMETER TaskName
-	Set the task name - defaults to 'SCCM Expeditious Response Task'
-
 .PARAMETER Duration
 	Specify the duration (in hours) for the task. This is how long the duration will recur for. Note: The scheduled task deletes itself after this period (1-24)
 
@@ -17,8 +14,14 @@
 .PARAMETER Schedule
 	Specifies th schedules to run - 'HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval'
 
+.PARAMETER TaskName
+	Set the task name - defaults to 'SCCM Expeditious Response Task'
+
+.PARAMETER FileName
+    Sets the file name of the script that is generated. This allows you to run the script multiple times to assign differenct actions to differnt schedules
+
 .EXAMPLE
-	# Creates a scheduled task to run a MachinePol ad HardwareInv every 30 minutes for 24 hours. 
+	# Creates a scheduled task to run a MachinePol ad HardwareInv every 30 minutes for 24 hours.
 	.\New-ClientActionScheduledTask.ps1 -Schedule MachinePol,HardwareInv
 
 .NOTES
@@ -30,8 +33,6 @@
 #>
 param (
     [parameter(Mandatory = $false)]
-    [string]$TaskName = "SCCM Expeditious Response Task",
-    [parameter(Mandatory = $false)]
     [ValidateRange(1, 24)]
     [int]$Duration = 24,
     [parameter(Mandatory = $false)]
@@ -39,11 +40,15 @@ param (
     [int]$Interval = 30,
     [parameter(Mandatory = $false)]
     [ValidateSet('HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval')]
-    [string[]]$Schedule
+    [string[]]$Schedule,
+    [parameter(Mandatory = $false)]
+    [string]$TaskName = "SCCM Expeditious Response Task",
+    [parameter(Mandatory = $false)]
+    [string]$FileName = "ClientActionScheduledTask.ps1"
 )
 $ErrorActionPreference = 'Stop'
-# I am using $env:SystemRoot\temp because $env:temp will be the users temp folder if this is not run as system, and our scheduled task runs as system and may have access issues to the users temp folder
-$File = Join-Path -Path "$env:SystemRoot\temp" -ChildPath 'ClientActionScheduledTask.ps1'
+# I am using $env:SystemRoot\temp because $env:temp will be the users temp folder if this is not run as system, and our scheduled task runs as system and may have access issues to the users temp folder from a scheduled task
+$File = Join-Path -Path "$env:SystemRoot\temp" -ChildPath $FileName
 
 #region generate file which the scheduled task will execute
 @"
@@ -52,7 +57,7 @@ $File = Join-Path -Path "$env:SystemRoot\temp" -ChildPath 'ClientActionScheduled
     Invokes CM Client actions on local or remote machines
 
 .DESCRIPTION
-    This script will allow you to invoke a set of CM Client actions on a machine (with optional credentials), providing a list of the actions and an optional delay betweens actions. 
+    This script will allow you to invoke a set of CM Client actions on a machine (with optional credentials), providing a list of the actions and an optional delay betweens actions.
     The function will attempt for 5 minutes to invoke the action, with a 10 second delay inbetween attempts. This is to account for invoke-wmimethod failures.
 
 .PARAMETER Schedule
@@ -145,7 +150,7 @@ function Start-CMClientAction {
                     Write-Verbose "Successfully invoked the `$Schedule Cycle on `$Computer via the 'TriggerSchedule' WMI method"
                     Start-Sleep -Seconds `$Delay
                 }
-                `$StopWatch.Reset()    
+                `$StopWatch.Reset()
             }
         }
     }

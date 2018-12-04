@@ -210,6 +210,8 @@ try {
     $TaskDefinition.Settings.Enabled = $true
     $TaskDefinition.Settings.AllowDemandStart = $true
     $TaskDefinition.Settings.DisallowStartIfOnBatteries = $false
+    $TaskDefinition.Settings.StopIfGoingOnBatteries = $false
+    $TaskDefinition.Settings.Compatibility = 2
     $TaskDefinition.Settings.DeleteExpiredTaskAfter = "PT0S"
     
     #region task trigger creation
@@ -230,7 +232,6 @@ try {
     $Action.Path = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
     $Action.Arguments = "-NoProfile -NoLogo -NonInteractive -ExecutionPolicy RemoteSigned -Command `"$File`" -Schedule $($Schedule -join ',')"
     $RootTSFolder.RegisterTaskDefinition($TaskName, $TaskDefinition, 6, "System", $null, 5)
-    $CreatedTask.Settings.DeleteExpiredTaskAfter = "PT0S"
 }
 catch {
     Write-Error "Failed to create the scheduled task - $($_.Exception.Message)"

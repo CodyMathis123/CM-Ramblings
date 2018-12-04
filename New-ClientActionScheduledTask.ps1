@@ -181,21 +181,24 @@ function New-ScheduledTaskTimeString {
         $OutputDays = [string]::Format("{0}D", $TimeSpanDays)
     }
 
-    if ($TimeSpanHours -gt 0) {
-        $OutputHours = [string]::Format("{0}H", $TimeSpanHours)
+    if ($TimeSpanHours -gt 0 -or $TimeSpanMinutes -gt 0) {
+        $Delimiter = 'T'
+        if ($TimeSpanHours -gt 0) {
+            $OutputHours = [string]::Format("{0}H", $TimeSpanHours)
+        }
+
+        if ($TimeSpanMinutes -gt 0) {
+            $OutputMinutes = [string]::Format("{0}M", $TimeSpanMinutes)
+        }
     }
 
-    if ($TimeSpanMinutes -gt 0) {
-        $OutputMinutes = [string]::Format("{0}M", $TimeSpanMinutes)
-    }
-
-    [string]::Format("P{0}T{1}{2}", $OutputDays, $OutputHours, $OutputMinutes)
+    [string]::Format("P{0}{1}{2}{3}", $OutputDays, $Delimiter, $OutputHours, $OutputMinutes)
 
 }
 #endregion functions
 
 #region generate file which the scheduled task will execute
-${Function:Start-CMClientAction}  | Out-File -FilePath $File -Force
+${Function:Start-CMClientAction}.ToString().Trim()  | Out-File -FilePath $File -Force
 #endregion generate file which the scheduled task will execute
 
 #region create and register a scheduled task with expiration and set to delete itself

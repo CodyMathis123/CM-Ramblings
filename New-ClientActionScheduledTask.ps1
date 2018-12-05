@@ -21,9 +21,17 @@
 	Set the file name - defaults to "Start-CMClientAction.ps1" - this end up in c:\windows\temp so it'll eventually be deleted. 
 
 .EXAMPLE
-	# Creates a scheduled task to run a MachinePol ad HardwareInv every 30 minutes for 24 hours.
+	# Creates a scheduled task to run a MachinePol and HardwareInv every 30 minutes for 24 hours.
 	.\New-ClientActionScheduledTask.ps1 -Schedule MachinePol,HardwareInv
-
+	
+.EXAMPLE
+	# Creates a scheduled task to run HardwareInv,UpdateScan,UpdateEval every 15 minutes for 12 hours.
+	.\New-ClientActionScheduledTask.ps1 -Schedule HardwareInv,UpdateScan,UpdateEval -Interval 15 -Duration 12
+	
+.EXAMPLE
+	# Creates a scheduled task to run MachinePol every 5 minutes for 6 hours and names the task 'Expeditious CM Client Response'
+	.\New-ClientActionScheduledTask.ps1 -Schedule MachinePol -TaskName 'Expeditious CM Client Response' -Interval 5 -Duration 6
+	
 .NOTES
     FileName:    New-ClientActionScheduledTask.ps1
     Author:      Cody Mathis

@@ -105,6 +105,17 @@ function Start-CMClientAction {
     )
     begin {
         $TimeSpan = New-TimeSpan -Minutes 5
+        # Load Microsoft.SMS.TSEnvironment COM object
+        try {
+            $TSEnvironment = New-Object -ComObject Microsoft.SMS.TSEnvironment -ErrorAction SilentlyContinue
+        }
+        catch [System.Exception] {
+            Write-Warning -Message "Unable to construct Microsoft.SMS.TSEnvironment object"
+        }
+        #exit script if a task sequence is detected. No need to be doing policy refreshes in the middle of a TS!
+        if ($TSEnvironment) {
+            exit 0
+        }
     }
     process {
         foreach ($Computer in $ComputerName) {

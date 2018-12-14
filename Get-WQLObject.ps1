@@ -24,7 +24,7 @@ DynamicParam {
         $AttributeCollection.Add($ParameterAttribute)
         $SiteCode = (Get-WmiObject -Namespace "root\sms" -ClassName "__Namespace" -ComputerName $SMSProvider).Name.Substring(5, 3)
         $Namespace = [string]::Format("root\sms\site_{0}", $SiteCode)
-        $arrSet = Get-WmiObject -ComputerName $SMSProvider -Namespace $Namespace -Query "SELECT Name FROM SMS_Query WHERE Expression not like '*##PRM:*'" | Select-Object -ExpandProperty Name
+        $arrSet = Get-WmiObject -ComputerName $SMSProvider -Namespace $Namespace -Query "SELECT Name FROM SMS_Query WHERE Expression not like '%##PRM:%'" | Select-Object -ExpandProperty Name
         $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute($arrSet)
         $AttributeCollection.Add($ValidateSetAttribute)
         $RuntimeParameter = New-Object System.Management.Automation.RuntimeDefinedParameter($ParameterName, [string], $AttributeCollection)

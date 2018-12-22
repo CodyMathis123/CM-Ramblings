@@ -11,7 +11,7 @@ function Invoke-SCCMUpdates {
         [parameter(Mandatory = $false, ParameterSetName = 'PassUpdates', ValueFromPipeline)]
         [System.Management.ManagementObject[]]$Updates,
         # Credential to use
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
+        [parameter(Mandatory = $false)]
         [pscredential]$Credential
     )
     begin {
@@ -68,7 +68,6 @@ function Invoke-SCCMUpdates {
                         if ($PSBoundParameters.ContainsKey('Credential')) {
                             $invokeWmiMethodSplat.Add('Credential', $Credential)
                         }
-                        $invokeWmiMethodSplat
                         Invoke-WmiMethod @invokeWmiMethodSplat
                     }
                     else {
@@ -93,7 +92,6 @@ function Invoke-SCCMUpdates {
                             if ($PSBoundParameters.ContainsKey('Credential')) {
                                 $invokeWmiMethodSplat.Add('Credential', $Credential)
                             }
-                            $invokeWmiMethodSplat
                             Invoke-WmiMethod @invokeWmiMethodSplat
                         }
                         else {

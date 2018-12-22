@@ -8,7 +8,7 @@ function Get-PendingSCCMPatches {
         # switch to determine if Definition updates should be included
         [switch]$IncludeDefs,
         # Credential to use
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
+        [parameter(Mandatory = $false)]
         [system.management.automation.pscredential]$Credential
     )
     begin {

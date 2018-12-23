@@ -22,22 +22,23 @@
 
 .EXAMPLE
 	# Creates a scheduled task to run a MachinePol and HardwareInv every 30 minutes for 24 hours.
-	.\New-ClientActionScheduledTask.ps1 -Schedule MachinePol,HardwareInv
-	
-.EXAMPLE
-	# Creates a scheduled task to run HardwareInv,UpdateScan,UpdateEval every 15 minutes for 12 hours.
-	.\New-ClientActionScheduledTask.ps1 -Schedule HardwareInv,UpdateScan,UpdateEval -Interval 15 -Duration 12
-	
-.EXAMPLE
-	# Creates a scheduled task to run MachinePol every 5 minutes for 6 hours and names the task 'Expeditious CM Client Response'
-	.\New-ClientActionScheduledTask.ps1 -Schedule MachinePol -TaskName 'Expeditious CM Client Response' -Interval 5 -Duration 6
-	
+    .\New-ClientActionScheduledTask.ps1 -Schedule MachinePol,HardwareInv
+    
+.EXAMPLE	
+ 	# Creates a scheduled task to run HardwareInv,UpdateScan,UpdateEval every 15 minutes for 12 hours.	
+ 	.\New-ClientActionScheduledTask.ps1 -Schedule HardwareInv,UpdateScan,UpdateEval -Interval 15 -Duration 12	
+ 		
+ .EXAMPLE	
+ 	# Creates a scheduled task to run MachinePol every 5 minutes for 6 hours and names the task 'Expeditious CM Client Response'	
+ 	.\New-ClientActionScheduledTask.ps1 -Schedule MachinePol -TaskName 'Expeditious CM Client Response' -Interval 5 -Duration 6	
+ 
+
 .NOTES
     FileName:    New-ClientActionScheduledTask.ps1
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     11-29-2018
-    Updated:     12-04-2018
+    Updated:     12-23-2018
 #>
 param (
     [parameter(Mandatory = $false)]
@@ -94,7 +95,7 @@ $File = Join-Path -Path "$env:SystemRoot\temp" -ChildPath $FileName
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     11-29-2018
-    Updated:     11-29-2018
+    Updated:     12-23-2018
 #>
 function Start-CMClientAction {
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -162,17 +163,17 @@ function Start-CMClientAction {
                         if ($PSBoundParameters.ContainsKey('Credential')) {
                             $invokeWmiMethodSplat.Add('Credential', $Credential)
                         }
-                        Write-Verbose "Triggering a $Schedule Cycle on $Computer via the 'TriggerSchedule' WMI method"
+                        Write-Verbose "Triggering a $Option Cycle on $Computer via the 'TriggerSchedule' WMI method"
                         $Invocation = Invoke-WmiMethod @invokeWmiMethodSplat
                     }
                     catch {
-                        Write-Error "Failed to invoke the $Schedule cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge 5 minutes] Error: $($_.Exception.Message)"
+                        Write-Error "Failed to invoke the $Option cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge 5 minutes] Error: $($_.Exception.Message)"
                         Start-Sleep -Seconds 10
                     }
                 }
                 until ($Invocation -or $StopWatch.Elapsed -ge $TimeSpan)
                 if ($Invocation) {
-                    Write-Verbose "Successfully invoked the $Schedule Cycle on $Computer via the 'TriggerSchedule' WMI method"
+                    Write-Verbose "Successfully invoked the $Option Cycle on $Computer via the 'TriggerSchedule' WMI method"
                     Start-Sleep -Seconds $Delay
                 }
                 $StopWatch.Reset()    

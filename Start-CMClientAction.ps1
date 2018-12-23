@@ -27,7 +27,7 @@
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     11-29-2018
-    Updated:     11-29-2018
+    Updated:     12-23-2018
 #>
 function Start-CMClientAction {
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -51,22 +51,22 @@ function Start-CMClientAction {
         foreach ($Computer in $ComputerName) {
             foreach ($Option in $Schedule) {
                 $Action = switch ($Option) {
-                    'HardwareInv' {
+                    HardwareInv {
                         "{00000000-0000-0000-0000-000000000001}"
                     }
-                    'SoftwareInv' {
+                    SoftwareInv {
                         "{00000000-0000-0000-0000-000000000002}"
                     }
-                    'UpdateScan' {
+                    UpdateScan {
                         "{00000000-0000-0000-0000-000000000113}"
                     }
-                    'UpdateEval' {
+                    UpdateEval {
                         "{00000000-0000-0000-0000-000000000108}"
                     }
-                    'MachinePol' {
+                    MachinePol {
                         "{00000000-0000-0000-0000-000000000021}"
                     }
-                    'AppEval' {
+                    AppEval {
                         "{00000000-0000-0000-0000-000000000121}"
                     }
                 }
@@ -84,17 +84,17 @@ function Start-CMClientAction {
                         if ($PSBoundParameters.ContainsKey('Credential')) {
                             $invokeWmiMethodSplat.Add('Credential', $Credential)
                         }
-                        Write-Verbose "Triggering a $Schedule Cycle on $Computer via the 'TriggerSchedule' WMI method"
+                        Write-Verbose "Triggering a $Option Cycle on $Computer via the 'TriggerSchedule' WMI method"
                         $Invocation = Invoke-WmiMethod @invokeWmiMethodSplat
                     }
                     catch {
-                        Write-Error "Failed to invoke the $Schedule cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge 5 minutes] Error: $($_.Exception.Message)"
+                        Write-Error "Failed to invoke the $Option cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge 5 minutes] Error: $($_.Exception.Message)"
                         Start-Sleep -Seconds 10
                     }
                 }
                 until ($Invocation -or $StopWatch.Elapsed -ge $TimeSpan)
                 if ($Invocation) {
-                    Write-Verbose "Successfully invoked the $Schedule Cycle on $Computer via the 'TriggerSchedule' WMI method"
+                    Write-Verbose "Successfully invoked the $Option Cycle on $Computer via the 'TriggerSchedule' WMI method"
                     Start-Sleep -Seconds $Delay
                 }
                 $StopWatch.Reset()    

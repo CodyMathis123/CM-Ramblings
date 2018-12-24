@@ -153,6 +153,7 @@ function Start-CMClientAction {
                 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
                 do {
                     try {
+		    	Remove-Variable Invocation -ErrorAction SilentlyContinue
                         $invokeWmiMethodSplat = @{
                             ComputerName = $Computer
                             Name         = 'TriggerSchedule'

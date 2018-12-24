@@ -80,6 +80,7 @@ function Start-CMClientAction {
                             Namespace    = 'root\ccm'
                             Class        = 'sms_client'
                             ArgumentList = $Action
+			    ErrorAction  = 'Stop'
                         }
                         if ($PSBoundParameters.ContainsKey('Credential')) {
                             $invokeWmiMethodSplat.Add('Credential', $Credential)

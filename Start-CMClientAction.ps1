@@ -74,14 +74,15 @@ function Start-CMClientAction {
                 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
                 do {
                     try {
-			Remove-Variable Invocation -ErrorAction SilentlyContinue
+                        Remove-Variable MustExit -ErrorAction SilentlyContinue
+                        Remove-Variable Invocation -ErrorAction SilentlyContinue
                         $invokeWmiMethodSplat = @{
                             ComputerName = $Computer
                             Name         = 'TriggerSchedule'
                             Namespace    = 'root\ccm'
                             Class        = 'sms_client'
                             ArgumentList = $Action
-			    ErrorAction  = 'Stop'
+                            ErrorAction  = 'Stop'
                         }
                         if ($PSBoundParameters.ContainsKey('Credential')) {
                             $invokeWmiMethodSplat.Add('Credential', $Credential)
@@ -89,15 +90,22 @@ function Start-CMClientAction {
                         Write-Verbose "Triggering a $Option Cycle on $Computer via the 'TriggerSchedule' WMI method"
                         $Invocation = Invoke-WmiMethod @invokeWmiMethodSplat
                     }
+                    catch [System.UnauthorizedAccessException] {
+                        Write-Error -Message "Access denied to $Computer" -Category AuthenticationError -Exception $_.Exception
+                        $MustExit = $true
+                    }
                     catch {
-                        Write-Error "Failed to invoke the $Option cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge 5 minutes] Error: $($_.Exception.Message)"
+                        Write-Warning "Failed to invoke the $Option cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge 5 minutes] Error: $($_.Exception.Message)"
                         Start-Sleep -Seconds 10
                     }
                 }
-                until ($Invocation -or $StopWatch.Elapsed -ge $TimeSpan)
+                until ($Invocation -or $StopWatch.Elapsed -ge $TimeSpan -or $MustExit)
                 if ($Invocation) {
                     Write-Verbose "Successfully invoked the $Option Cycle on $Computer via the 'TriggerSchedule' WMI method"
                     Start-Sleep -Seconds $Delay
+                }
+                elseif ($StopWatch.Elapsed -ge $TimeSpan) {
+                    Write-Error "Failed to invoke $Option cycle via WMI after 5 minutes of retrrying."
                 }
                 $StopWatch.Reset()    
             }

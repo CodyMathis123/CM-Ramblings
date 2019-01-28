@@ -28,8 +28,8 @@ switch ($PSCmdlet.ParameterSetName) {
             "Office Click-to-Run apps" = 129;
         }        
         $ToCalc = [System.Collections.ArrayList]::new()
-        foreach ($Workload in $DesiredWorkload) {
-            $null = $ToCalc.Add($Workloads[$Workload])
+        foreach ($Option in $DesiredWorkload) {
+            $null = $ToCalc.Add($Workloads[$Option])
         }
         $Calculation = $ToCalc -join ' -bor '
         $Output = [scriptblock]::Create($Calculation)

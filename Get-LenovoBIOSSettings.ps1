@@ -28,45 +28,61 @@ function Get-LenovoBIOSSettings {
     (
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
         [Alias('Computer', 'HostName', 'ServerName', 'IPAddress')]
-        [string]$ComputerName,
+        [string[]]$ComputerName,
         [switch]$WithOptions,
         [parameter(Mandatory = $false)]
         [pscredential]$Credential
     )
-    $CurrentSetting = @{}
-    $getWmiObjectSplat = @{
-        ComputerName = $ComputerName
-        Namespace    = 'root\wmi'
-        Class        = 'Lenovo_BiosSetting'
+    begin {
+        $CurrentSetting = [System.Collections.Generic.List[object]]::new()
+        if (-not $PSBoundParameters.ContainsKey('ComputerName')) {
+            $ComputerName = $env:COMPUTERNAME
+        }
     }
-    if ($PSBoundParameters.ContainsKey('Credential')) {
-        $getWmiObjectSplat.Credential = $Credential
-    }
-    if ($PSBoundParameters.ContainsKey('ComputerName')) {
-        $getWmiObjectSplat.ComputerName = $ComputerName
-    }
-    $Settings = Get-WmiObject @getWmiObjectSplat | Select-Object -ExpandProperty CurrentSetting | Where-Object { $_ }
-
-    foreach ($Setting in $Settings) {
-        $Setting = (($Setting -split ';', 2)[0] -split ',', 2)
-        $SettingName = $Setting[0]
-        $SettingValue = $Setting[1]
-        if ($WithOptions) {
+    process {
+        foreach($Computer in $ComputerName) {
             $getWmiObjectSplat = @{
-                Namespace = 'root\wmi'
-                Class     = 'Lenovo_GetBiosSelections'
+                ComputerName = $Computer
+                Namespace    = 'root\wmi'
+                Class        = 'Lenovo_BiosSetting'
             }
             if ($PSBoundParameters.ContainsKey('Credential')) {
                 $getWmiObjectSplat.Credential = $Credential
             }
             if ($PSBoundParameters.ContainsKey('ComputerName')) {
-                $getWmiObjectSplat.ComputerName = $ComputerName
+                $getWmiObjectSplat.ComputerName = $Computer
             }
-    
-            $SettingOptions = ((Get-WmiObject @getWmiObjectSplat).GetBiosSelections($SettingName)) | Select-Object -ExpandProperty Selections
-            $SettingValue = [string]::Format("{0} - ({1})", $SettingValue, $SettingOptions)
+            $Settings = Get-WmiObject @getWmiObjectSplat | Select-Object -ExpandProperty CurrentSetting | Where-Object { $_ }
+            
+            foreach ($Setting in $Settings) {
+                $Setting = (($Setting -split ';', 2)[0] -split ',', 2)
+                $SettingName = $Setting[0]
+                $SettingValue = $Setting[1]
+                $HashTable = [ordered]@{
+                    ComputerName = $Computer
+                    SettingName = $SettingName
+                    SettingValue = $SettingValue
+                }
+                if ($WithOptions) {
+                    $getWmiObjectSplat = @{
+                        Namespace = 'root\wmi'
+                        Class     = 'Lenovo_GetBiosSelections'
+                    }
+                    if ($PSBoundParameters.ContainsKey('Credential')) {
+                        $getWmiObjectSplat.Credential = $Credential
+                    }
+                    if ($PSBoundParameters.ContainsKey('ComputerName')) {
+                        $getWmiObjectSplat.ComputerName = $Computer
+                    }
+            
+                    $SettingOptions = ((Get-WmiObject @getWmiObjectSplat).GetBiosSelections($SettingName)) | Select-Object -ExpandProperty Selections
+                    $HashTable.Add('SettingOptions', $SettingOptions)
+                }
+                $CurrentSetting.Add([pscustomobject]$HashTable)
+            }
         }
-        $CurrentSetting.Add($SettingName, $SettingValue)
     }
-    return $CurrentSetting
+    end {
+        return $CurrentSetting
+    }
 }

@@ -33,7 +33,7 @@ function Get-LenovoBIOSSettings {
         [parameter(Mandatory = $false)]
         [pscredential]$Credential
     )
-    $CurrentSetting = [System.Collections.Generic.List[object]]::new()
+    $CurrentSetting = @{}
     $getWmiObjectSplat = @{
         ComputerName = $ComputerName
         Namespace    = 'root\wmi'
@@ -64,18 +64,9 @@ function Get-LenovoBIOSSettings {
             }
     
             $SettingOptions = ((Get-WmiObject @getWmiObjectSplat).GetBiosSelections($SettingName)) | Select-Object -ExpandProperty Selections
-            $CurrentSetting.Add([pscustomobject]@{
-                    Name    = $SettingName
-                    Setting = $SettingValue
-                    Options = $SettingOptions
-                })
+            $SettingValue = [string]::Format("{0} - ({1})", $SettingValue, $SettingOptions)
         }
-        else {
-            $CurrentSetting.Add([pscustomobject]@{
-                    Name    = $SettingName
-                    Setting = $SettingValue
-                })
-        }
+        $CurrentSetting.Add($SettingName, $SettingValue)
     }
     return $CurrentSetting
 }

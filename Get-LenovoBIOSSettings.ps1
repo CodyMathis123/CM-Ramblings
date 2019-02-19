@@ -1,7 +1,7 @@
 function Get-LenovoBIOSSettings {
     <#
     .SYNOPSIS
-        Gets current BIOS settings from Lenovo computer
+        Gets current BIOS settings from Lenovo computer(s)
     .DESCRIPTION
         This functions allows you to retrieve all the BIOS settings from a Lenovo computer, including a switch to 
         return the 'options' for each setting. Note that retrieving the options makes this take longer
@@ -40,11 +40,13 @@ function Get-LenovoBIOSSettings {
         }
     }
     process {
-        foreach($Computer in $ComputerName) {
+        foreach ($Computer in $ComputerName) {
+            #region gather BIOS settings from 'Lenovo_BiosSetting' WMI class, and check for permissions
             $getWmiObjectSplat = @{
                 ComputerName = $Computer
                 Namespace    = 'root\wmi'
                 Class        = 'Lenovo_BiosSetting'
+                ErrorAction  = 'Stop'
             }
             if ($PSBoundParameters.ContainsKey('Credential')) {
                 $getWmiObjectSplat.Credential = $Credential
@@ -52,21 +54,23 @@ function Get-LenovoBIOSSettings {
             if ($PSBoundParameters.ContainsKey('ComputerName')) {
                 $getWmiObjectSplat.ComputerName = $Computer
             }
-            $Settings = Get-WmiObject @getWmiObjectSplat | Select-Object -ExpandProperty CurrentSetting | Where-Object { $_ }
-            
-            foreach ($Setting in $Settings) {
-                $Setting = (($Setting -split ';', 2)[0] -split ',', 2)
-                $SettingName = $Setting[0]
-                $SettingValue = $Setting[1]
-                $HashTable = [ordered]@{
-                    ComputerName = $Computer
-                    SettingName = $SettingName
-                    SettingValue = $SettingValue
-                }
+            try {
+                $Settings = Get-WmiObject @getWmiObjectSplat | Select-Object -ExpandProperty CurrentSetting | Where-Object { $_ }
+                $AccessDenied = $false
+            }
+            catch [System.UnauthorizedAccessException] {
+                Write-Error -Message "Access denied to $Computer" -Category AuthenticationError -Exception $_.Exception
+                $AccessDenied = $true
+            }
+            #endregion gather BIOS settings from 'Lenovo_BiosSetting' WMI class, and check for permissions
+
+            if (-not $AccessDenied) {
+                #region test for the existance of 'Lenovo_GetBiosSelections' WMI class to determine if we can query for available settings
                 if ($WithOptions) {
                     $getWmiObjectSplat = @{
-                        Namespace = 'root\wmi'
-                        Class     = 'Lenovo_GetBiosSelections'
+                        Namespace   = 'root\wmi'
+                        Class       = 'Lenovo_GetBiosSelections'
+                        ErrorAction = 'Stop'
                     }
                     if ($PSBoundParameters.ContainsKey('Credential')) {
                         $getWmiObjectSplat.Credential = $Credential
@@ -74,11 +78,50 @@ function Get-LenovoBIOSSettings {
                     if ($PSBoundParameters.ContainsKey('ComputerName')) {
                         $getWmiObjectSplat.ComputerName = $Computer
                     }
-            
-                    $SettingOptions = ((Get-WmiObject @getWmiObjectSplat).GetBiosSelections($SettingName)) | Select-Object -ExpandProperty Selections
-                    $HashTable.Add('SettingOptions', $SettingOptions)
+                    try {
+                        $null = Get-WmiObject @getWmiObjectSplat
+                        $CanGetOptions = $true
+                    }
+                    catch { 
+                        if ($_.CategoryInfo.Category -eq 'InvalidType') {
+                            Write-Warning "Unable to query for BIOS Setting Options because 'Lenovo_GetBiosSelections' does not exist on $Computer"
+                            $CanGetOptions = $false
+                        }
+                    }
                 }
-                $CurrentSetting.Add([pscustomobject]$HashTable)
+                #endregion test for the existance of 'Lenovo_GetBiosSelections' WMI class to determine if we can query for available settings
+
+                #region format settings appropriately and check for options if requested and available
+                foreach ($Setting in $Settings) {
+                    $Setting = (($Setting -split ';', 2)[0] -split ',', 2)
+                    $SettingName = $Setting[0]
+                    $SettingValue = $Setting[1]
+                    $HashTable = [ordered]@{
+                        ComputerName = $Computer
+                        SettingName  = $SettingName
+                        SettingValue = $SettingValue
+                    }
+                    if ($WithOptions -and $CanGetOptions) {
+                        $getWmiObjectSplat = @{
+                            Namespace = 'root\wmi'
+                            Class     = 'Lenovo_GetBiosSelections'
+                        }
+                        if ($PSBoundParameters.ContainsKey('Credential')) {
+                            $getWmiObjectSplat.Credential = $Credential
+                        }
+                        if ($PSBoundParameters.ContainsKey('ComputerName')) {
+                            $getWmiObjectSplat.ComputerName = $Computer
+                        }
+                
+                        $SettingOptions = ((Get-WmiObject @getWmiObjectSplat).GetBiosSelections($SettingName)) | Select-Object -ExpandProperty Selections
+                        $HashTable.Add('SettingOptions', $SettingOptions)
+                    }
+                    elseif ($WithOptions) {
+                        $HashTable.Add('SettingOptions', $null)
+                    }
+                    $CurrentSetting.Add([pscustomobject]$HashTable)
+                }
+                #endregion format settings appropriately and check for options if requested and available
             }
         }
     }

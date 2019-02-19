@@ -56,15 +56,26 @@ function Get-LenovoBIOSSettings {
             }
             try {
                 $Settings = Get-WmiObject @getWmiObjectSplat | Select-Object -ExpandProperty CurrentSetting | Where-Object { $_ }
-                $AccessDenied = $false
+                $Accessible = $true
             }
             catch [System.UnauthorizedAccessException] {
                 Write-Error -Message "Access denied to $Computer" -Category AuthenticationError -Exception $_.Exception
-                $AccessDenied = $true
+                $Accessible = $false
+            }
+            catch [System.Runtime.InteropServices.COMException] {
+                if ($_.Exception.ErrorCode -eq 0x800706BA) {
+                    # This is instead of the "RPC Server Unavailable" error
+                    Write-Error -Message "The RPC Server Unavailable for $Computer. The machine is likely inaccessible over the network" -Category ConnectionError -Exception $_.Exception
+                    $Accessible = $false
+                }
+                else {
+                    $_
+                    $Accessible = $false
+                }
             }
             #endregion gather BIOS settings from 'Lenovo_BiosSetting' WMI class, and check for permissions
 
-            if (-not $AccessDenied) {
+            if ($Accessible) {
                 #region test for the existance of 'Lenovo_GetBiosSelections' WMI class to determine if we can query for available settings
                 if ($WithOptions) {
                     $getWmiObjectSplat = @{

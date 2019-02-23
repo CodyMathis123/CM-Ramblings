@@ -1,4 +1,5 @@
-<#
+function Start-CMClientAction {
+    <#
 .SYNOPSIS
     Invokes CM Client actions on local or remote machines
 
@@ -29,18 +30,18 @@
     Created:     11-29-2018
     Updated:     12-23-2018
 #>
-function Start-CMClientAction {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param
     (
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
+        [Alias('Computer', 'HostName', 'ServerName', 'IPAddress')]
+        [string[]]$ComputerName = $env:COMPUTERNAME,
         [parameter(Mandatory = $true)]
-        [ValidateSet('HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval')]
+        [ValidateSet('HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR')]
         [string[]]$Schedule,
         [parameter(Mandatory = $false)]
         [ValidateRange(0, 30)]
         [int]$Delay = 5,
-        [parameter(Mandatory = $false)]
-        [string[]]$ComputerName = $env:COMPUTERNAME,
         [parameter(Mandatory = $false)]
         [pscredential]$Credential
     )
@@ -68,6 +69,9 @@ function Start-CMClientAction {
                     }
                     AppEval {
                         "{00000000-0000-0000-0000-000000000121}"
+                    }
+                    DDR {
+                        "{00000000-0000-0000-0000-000000000003}"
                     }
                 }
 

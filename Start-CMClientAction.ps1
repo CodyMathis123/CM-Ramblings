@@ -5,7 +5,7 @@ function Start-CMClientAction {
 
 .DESCRIPTION
     This script will allow you to invoke a set of CM Client actions on a machine (with optional credentials), providing a list of the actions and an optional delay betweens actions. 
-    The function will attempt for 5 minutes to invoke the action, with a 10 second delay inbetween attempts. This is to account for invoke-wmimethod failures.
+    The function will attempt for a default of 5 minutes to invoke the action, with a 10 second delay inbetween attempts. This is to account for invoke-wmimethod failures.
 
 .PARAMETER Schedule
 	Define the schedules to run on the machine - 'HardwareInv', 'FullHardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval'
@@ -128,7 +128,7 @@ function Start-CMClientAction {
                         $MustExit = $true
                     }
                     catch {
-                        Write-Warning "Failed to invoke the $Option cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge 5 minutes] Error: $($_.Exception.Message)"
+                        Write-Warning "Failed to invoke the $Option cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge $Timeout minutes] Error: $($_.Exception.Message)"
                         Start-Sleep -Seconds 10
                     }
                 }
@@ -138,7 +138,7 @@ function Start-CMClientAction {
                     Start-Sleep -Seconds $Delay
                 }
                 elseif ($StopWatch.Elapsed -ge $TimeSpan) {
-                    Write-Error "Failed to invoke $Option cycle via WMI after 5 minutes of retrrying."
+                    Write-Error "Failed to invoke $Option cycle via WMI after $Timeout minutes of retrrying."
                 }
                 $StopWatch.Reset()    
             }

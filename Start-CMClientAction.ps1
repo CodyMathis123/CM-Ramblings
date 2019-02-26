@@ -8,13 +8,16 @@ function Start-CMClientAction {
     The function will attempt for 5 minutes to invoke the action, with a 10 second delay inbetween attempts. This is to account for invoke-wmimethod failures.
 
 .PARAMETER Schedule
-	Define the schedules to run on the machine - 'HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval'
+	Define the schedules to run on the machine - 'HardwareInv', 'FullHardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval'
 
 .PARAMETER Delay
 	Specify the delay in seconds between each schedule when more than one is ran - 0-30 seconds
 
 .PARAMETER ComputerName
-	Specifies the computers to run this against
+    Specifies the computers to run this against
+    
+.PARAMETER Timeout
+    Specifies the timeout in minutes after which any individual computer will stop attempting the schedules. Default is 5 minutes.
 
 .PARAMETER Credential
 	Optional PSCredential
@@ -37,41 +40,46 @@ function Start-CMClientAction {
         [Alias('Computer', 'HostName', 'ServerName', 'IPAddress')]
         [string[]]$ComputerName = $env:COMPUTERNAME,
         [parameter(Mandatory = $true)]
-        [ValidateSet('HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR')]
+        [ValidateSet('HardwareInv', 'FullHardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR')]
         [string[]]$Schedule,
         [parameter(Mandatory = $false)]
         [ValidateRange(0, 30)]
         [int]$Delay = 5,
         [parameter(Mandatory = $false)]
+        [int]$Timeout = 5,
+        [parameter(Mandatory = $false)]
         [pscredential]$Credential
     )
     begin {
-        $TimeSpan = New-TimeSpan -Minutes 5
+        $TimeSpan = New-TimeSpan -Minutes $Timeout
     }
     process {
         foreach ($Computer in $ComputerName) {
             foreach ($Option in $Schedule) {
                 $Action = switch ($Option) {
                     HardwareInv {
-                        "{00000000-0000-0000-0000-000000000001}"
+                        '{00000000-0000-0000-0000-000000000001}'
+                    }
+                    FullHardwareInv {
+                        '{00000000-0000-0000-0000-000000000001}'
                     }
                     SoftwareInv {
-                        "{00000000-0000-0000-0000-000000000002}"
+                        '{00000000-0000-0000-0000-000000000002}'
                     }
                     UpdateScan {
-                        "{00000000-0000-0000-0000-000000000113}"
+                        '{00000000-0000-0000-0000-000000000113}'
                     }
                     UpdateEval {
-                        "{00000000-0000-0000-0000-000000000108}"
+                        '{00000000-0000-0000-0000-000000000108}'
                     }
                     MachinePol {
-                        "{00000000-0000-0000-0000-000000000021}"
+                        '{00000000-0000-0000-0000-000000000021}'
                     }
                     AppEval {
-                        "{00000000-0000-0000-0000-000000000121}"
+                        '{00000000-0000-0000-0000-000000000121}'
                     }
                     DDR {
-                        "{00000000-0000-0000-0000-000000000003}"
+                        '{00000000-0000-0000-0000-000000000003}'
                     }
                 }
 
@@ -80,6 +88,27 @@ function Start-CMClientAction {
                     try {
                         Remove-Variable MustExit -ErrorAction SilentlyContinue
                         Remove-Variable Invocation -ErrorAction SilentlyContinue
+                        if ($Option -eq 'FullHardwareInv') {
+                            $getWMIObjectSplat = @{
+                                ComputerName = $Computer
+                                Namespace    = 'root\ccm\invagt'
+                                Class        = 'InventoryActionStatus'
+                                Filter       = "InventoryActionID ='$Action'"
+                                ErrorAction  = 'Stop'
+                            }
+                            if ($PSBoundParameters.ContainsKey('Credential')) {
+                                $getWMIObjectSplat.Add('Credential', $Credential)
+                            }
+                            Write-Verbose "Attempting to delete Hardware Inventory history for $Computer as a FullHardwareInv was requested"
+                            $HWInv = Get-WMIObject @getWMIObjectSplat
+                            if ($null -ne $HWInv) {
+                                $HWInv.Delete()
+                                Write-Verbose "Hardware Inventory history deleted for $Computer"
+                            }
+                            else {
+                                Write-Verbose "No Hardware Inventory history to delete for $Computer"
+                            }
+                        }
                         $invokeWmiMethodSplat = @{
                             ComputerName = $Computer
                             Name         = 'TriggerSchedule'

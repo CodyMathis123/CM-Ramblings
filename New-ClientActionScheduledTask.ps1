@@ -12,7 +12,7 @@
 	Specifies the interval to run the actions at in minutes - this is the interval for scheduled task recurrence
 
 .PARAMETER Schedule
-	Specifies th schedules to run - 'HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR'
+	Specifies the schedules to run on the machine - 'HardwareInv', 'FullHardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR'
 
 .PARAMETER TaskName
     Set the task name - defaults to "SCCM Action Scheduler - [$($Schedule -join ',')]"
@@ -46,7 +46,7 @@ param (
     [parameter(Mandatory = $false)]
     [int]$Interval = 30,
     [parameter(Mandatory = $true)]
-    [ValidateSet('HardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR')]
+    [ValidateSet('HardwareInv', 'FullHardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR')]
     [string[]]$Schedule,
     [parameter(Mandatory = $false)]
     [string]$TaskName,
@@ -76,7 +76,7 @@ function Start-CMClientAction {
     The function will attempt for a default of 5 minutes to invoke the action, with a 10 second delay inbetween attempts. This is to account for invoke-wmimethod failures.
 
 .PARAMETER Schedule
-	Define the schedules to run on the machine - 'HardwareInv', 'FullHardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval'
+	Define the schedules to run on the machine - 'HardwareInv', 'FullHardwareInv', 'SoftwareInv', 'UpdateScan', 'UpdateEval', 'MachinePol', 'AppEval', 'DDR'
 
 .PARAMETER Delay
 	Specify the delay in seconds between each schedule when more than one is ran - 0-30 seconds
@@ -135,29 +135,26 @@ function Start-CMClientAction {
     process {
         foreach ($Computer in $ComputerName) {
             foreach ($Option in $Schedule) {
-                $Action = switch ($Option) {
-                    HardwareInv {
+                $Action = switch -Regex ($Option) {
+                    '^HardwareInv$|^FullHardwareInv$' {
                         '{00000000-0000-0000-0000-000000000001}'
                     }
-                    FullHardwareInv {
-                        '{00000000-0000-0000-0000-000000000001}'
-                    }
-                    SoftwareInv {
+                    '^SoftwareInv$' {
                         '{00000000-0000-0000-0000-000000000002}'
                     }
-                    UpdateScan {
+                    '^UpdateScan$' {
                         '{00000000-0000-0000-0000-000000000113}'
                     }
-                    UpdateEval {
+                    '^UpdateEval$' {
                         '{00000000-0000-0000-0000-000000000108}'
                     }
-                    MachinePol {
+                    '^MachinePol$' {
                         '{00000000-0000-0000-0000-000000000021}'
                     }
-                    AppEval {
+                    '^AppEval$' {
                         '{00000000-0000-0000-0000-000000000121}'
                     }
-                    DDR {
+                    '^DDR$' {
                         '{00000000-0000-0000-0000-000000000003}'
                     }
                 }

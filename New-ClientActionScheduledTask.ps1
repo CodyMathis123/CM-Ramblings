@@ -38,7 +38,7 @@
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     11-29-2018
-    Updated:     02-26-2019
+    Updated:     03-09-2019
 #>
 param (
     [parameter(Mandatory = $false)]
@@ -104,7 +104,7 @@ function Start-CMClientAction {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param
     (
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [Alias('Computer', 'HostName', 'ServerName', 'IPAddress')]
         [string[]]$ComputerName = $env:COMPUTERNAME,
         [parameter(Mandatory = $true)]

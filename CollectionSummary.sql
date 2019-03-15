@@ -17,23 +17,38 @@ END AS 'IncrementalRefreshLength'
 , CASE WHEN HasExcludes.DependentCollectionID IS NOT NULL THEN 1
 ELSE 0
 END AS 'HasExcludes'
-, STUFF((SELECT ','+ Excludes.SourceCollectionID FROM [dbo].[vSMS_CollectionDependencies] Excludes WHERE Excludes.DependentCollectionID = col.SiteID and Excludes.RelationshipType = 3 FOR XML PATH('')),1,1,'') AS 'Excludes'
+, STUFF((SELECT ','+ Excludes.SourceCollectionID
+    FROM [dbo].[vSMS_CollectionDependencies] Excludes
+    WHERE Excludes.DependentCollectionID = col.SiteID and Excludes.RelationshipType = 3
+    FOR XML PATH('')),1,1,'') AS 'Excludes'
 , CASE WHEN UsedAsExclude.DependentCollectionID IS NOT NULL THEN 1
 ELSE 0
 END AS 'UsedAsExclude'
-, STUFF((SELECT ','+ ExcludedFrom.DependentCollectionID FROM [dbo].[vSMS_CollectionDependencies] ExcludedFrom WHERE ExcludedFrom.SourceCollectionID = col.SiteID and ExcludedFrom.RelationshipType = 3 FOR XML PATH('')),1,1,'') AS 'ExcludedFrom'
+, STUFF((SELECT ','+ ExcludedFrom.DependentCollectionID
+    FROM [dbo].[vSMS_CollectionDependencies] ExcludedFrom
+    WHERE ExcludedFrom.SourceCollectionID = col.SiteID and ExcludedFrom.RelationshipType = 3
+    FOR XML PATH('')),1,1,'') AS 'ExcludedFrom'
 , CASE WHEN HasIncludes.DependentCollectionID IS NOT NULL THEN 1
 ELSE 0
 END AS 'HasIncludes'
-, STUFF((SELECT ','+ Includes.SourceCollectionID FROM [dbo].[vSMS_CollectionDependencies] Includes WHERE Includes.DependentCollectionID = col.SiteID and Includes.RelationshipType = 2 FOR XML PATH('')),1,1,'') AS 'Includes'
+, STUFF((SELECT ','+ Includes.SourceCollectionID
+    FROM [dbo].[vSMS_CollectionDependencies] Includes
+    WHERE Includes.DependentCollectionID = col.SiteID and Includes.RelationshipType = 2
+    FOR XML PATH('')),1,1,'') AS 'Includes'
 , CASE WHEN UsedAsInclude.DependentCollectionID IS NOT NULL THEN 1
 ELSE 0
 END AS 'UsedAsInclude'
-, STUFF((SELECT ','+ IncludedIn.DependentCollectionID FROM [dbo].[vSMS_CollectionDependencies] IncludedIn WHERE IncludedIn.SourceCollectionID = col.SiteID and IncludedIn.RelationshipType = 2 FOR XML PATH('')),1,1,'') AS 'IncludedIn'
+, STUFF((SELECT ','+ IncludedIn.DependentCollectionID
+    FROM [dbo].[vSMS_CollectionDependencies] IncludedIn
+    WHERE IncludedIn.SourceCollectionID = col.SiteID and IncludedIn.RelationshipType = 2
+    FOR XML PATH('')),1,1,'') AS 'IncludedIn'
 , CASE WHEN UsedAsLimitingCollection.DependentCollectionID IS NOT NULL THEN 1
 ELSE 0
 END AS 'UsedAsLimitingCollection'
-, STUFF((SELECT ','+ Limits.DependentCollectionID FROM [dbo].[vSMS_CollectionDependencies] Limits WHERE Limits.SourceCollectionID = col.SiteID and Limits.RelationshipType = 1 FOR XML PATH('')),1,1,'') AS 'Limits'
+, STUFF((SELECT ','+ Limits.DependentCollectionID
+    FROM [dbo].[vSMS_CollectionDependencies] Limits
+    WHERE Limits.SourceCollectionID = col.SiteID and Limits.RelationshipType = 1
+    FOR XML PATH('')),1,1,'') AS 'Limits'
 , CASE WHEN HasPolicyDeployment.CollectionID IS NOT NULL THEN 1
 ELSE 0
 END AS 'HasPolicyDeployment'
@@ -49,6 +64,9 @@ END AS 'HasBaselineDeployment'
 , CASE WHEN HasTaskSequenceDeployment.CollectionID IS NOT NULL THEN 1
 ELSE 0
 END AS 'HasTaskSequenceDeployment'
+, CASE WHEN HasUpdateDeployment.CollectionID IS NOT NULL THEN 1
+ELSE 0
+END AS 'HasUpdateDeployment'
 , mw.Name AS 'MW Name'
 , mw.Description AS 'MW Description'
 , mw.Schedules AS 'MW ScheduleString'
@@ -85,6 +103,5 @@ FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[vDeploymentSummary] HasUpdateDeployment ON HasUpdateDeployment.CollectionID = col.SiteID AND HasUpdateDeployment.FeatureType = 5
     LEFT JOIN [dbo].[vDeploymentSummary] HasBaselineDeployment ON HasBaselineDeployment.CollectionID = col.SiteID AND HasBaselineDeployment.FeatureType = 6
     LEFT JOIN [dbo].[vDeploymentSummary] HasTaskSequenceDeployment ON HasTaskSequenceDeployment.CollectionID = col.SiteID AND HasTaskSequenceDeployment.FeatureType = 7
-	LEFT JOIN [dbo].[Collections_L] colrefresh ON colrefresh.CollectionID = col.CollectionID
-	LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
-	ORDER BY LimitToCollectionName
+    LEFT JOIN [dbo].[Collections_L] colrefresh ON colrefresh.CollectionID = col.CollectionID
+    LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID

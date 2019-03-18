@@ -152,7 +152,7 @@ order by
                 DPDictionary     = $Dictionary
                 Mandatory        = $true
                 Type             = [string[]]
-                ValidateSet      = $($CollectionInfo.$Var)
+                ValidateSet      = $($CollectionInfo.$Var | Where-Object { $PSItem.Trim() } | Select-Object -Unique)
                 Name             = $Var
             }
             New-DynamicParam @newDynamicParamSplat
@@ -234,7 +234,7 @@ AND col.{0} = '{1}'
                 Get-WhereFilter -InputData $LimitToCollectionName -ColumnName $PSItem
             }
             'HasAppDeployment' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasAppDeployment.CollectionID IS NOT NULL"
                 }
                 else {
@@ -242,7 +242,7 @@ AND col.{0} = '{1}'
                 }
             }
             'HasBaselineDeployment' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasBaselineDeployment.CollectionID IS NOT NULL"
                 }
                 else {
@@ -250,7 +250,7 @@ AND col.{0} = '{1}'
                 }
             }
             'HasExcludes' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasExcludes.DependentCollectionID IS NOT NULL"
                 }
                 else {
@@ -258,7 +258,7 @@ AND col.{0} = '{1}'
                 }
             }
             'HasIncludes' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasIncludes.DependentCollectionID IS NOT NULL"
                 }
                 else {
@@ -266,7 +266,7 @@ AND col.{0} = '{1}'
                 }
             }
             'HasPackageDeployment' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasPackageDeployment.CollectionID IS NOT NULL"
                 }
                 else {
@@ -274,7 +274,7 @@ AND col.{0} = '{1}'
                 }
             }
             'HasPolicyDeployment' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasPolicyDeployment.CollectionID IS NOT NULL"
                 }
                 else {
@@ -282,7 +282,7 @@ AND col.{0} = '{1}'
                 }
             }
             'HasTaskSequenceDeployment' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasTaskSequenceDeployment.CollectionID IS NOT NULL"
                 }
                 else {
@@ -290,7 +290,7 @@ AND col.{0} = '{1}'
                 }
             }
             'HasUpdateDeployment' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND HasUpdateDeployment.CollectionID IS NOT NULL"
                 }
                 else {
@@ -298,7 +298,7 @@ AND col.{0} = '{1}'
                 }
             }
             'MW_Enabled' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND mw.ServiceWindowType IS NOT NULL"
                 }
                 else {
@@ -306,7 +306,7 @@ AND col.{0} = '{1}'
                 }
             }
             'UsedAsExclude' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND UsedAsExclude.SourceCollectionID IS NOT NULL"
                 }
                 else {
@@ -314,7 +314,7 @@ AND col.{0} = '{1}'
                 }
             }
             'UsedAsInclude' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND UsedAsInclude.DependentCollectionID IS NOT NULL"
                 }
                 else {
@@ -322,7 +322,7 @@ AND col.{0} = '{1}'
                 }
             }
             'UsedAsLimitingCollection' {
-                if(Get-Variable -Name $PSItem -ValueOnly) {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
                     "AND UsedAsLimitingCollection.DependentCollectionID IS NOT NULL"
                 }
                 else {

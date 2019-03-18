@@ -67,7 +67,10 @@ function Get-CMCollectionSummary {
         [ValidateSet('Any Incremental', 'Periodic Updates Only', 'Non-Recurring Schedule'
             , 'Non-Recurring Schedule and Incremental', 'Manual Updates Only'
             , 'Incremental and Periodic Updates', 'Incremental Updates Only')]
-        [string[]]$RefreshType
+        [string[]]$RefreshType,
+        [parameter(Mandatory = $false)]
+        [ValidateSet('General', 'Updates', 'OSD')]
+        [string[]]$MWType
     )
     DynamicParam {
         #region function New-DynamicParam - All credit to RamblingCookieMonster (https://github.com/RamblingCookieMonster/PowerShell/blob/master/New-DynamicParam.ps1)
@@ -198,8 +201,8 @@ order by
         }
         #endregion Assign DynamicParam results to variable - All credit to RamblingCookieMonster (https://github.com/RamblingCookieMonster/PowerShell/blob/master/New-DynamicParam.ps1)
 
-        #region function Get-WhereFilter - Generate a where filter, either IN (<array>) or = 'InputData'
-        function Get-WhereFilter {
+        #region function Get-CollectionWhereFilter - Generate a where filter, either IN (<array>) or = 'InputData'
+        function Get-CollectionWhereFilter {
             param (
                 [string[]]$InputData,
                 [string]$ColumnName
@@ -222,27 +225,27 @@ AND col.{0} = '{1}'
                 }
             }
         }
-        #endregion function Get-WhereFilter - Generate a where filter, either IN (<array>) or = 'InputData'
+        #endregion function Get-CollectionWhereFilter - Generate a where filter, either IN (<array>) or = 'InputData'
 
         #region generate WHERE filter for SQL
         $WhereFilter = switch ($PsBoundParameters.Keys) {
             'CollectionID' {
-                Get-WhereFilter -InputData $CollectionID -ColumnName SiteID
+                Get-CollectionWhereFilter -InputData $CollectionID -ColumnName SiteID
             }
             'CollectionName' {
-                Get-WhereFilter -InputData $CollectionName -ColumnName $PSItem
+                Get-CollectionWhereFilter -InputData $CollectionName -ColumnName $PSItem
             }
             'LimitToCollectionID' {
-                Get-WhereFilter -InputData $LimitToCollectionID -ColumnName $PSItem
+                Get-CollectionWhereFilter -InputData $LimitToCollectionID -ColumnName $PSItem
             }
             'LimitToCollectionName' {
-                Get-WhereFilter -InputData $LimitToCollectionName -ColumnName $PSItem
+                Get-CollectionWhereFilter -InputData $LimitToCollectionName -ColumnName $PSItem
             }
             'RefreshType' {
                 $RefreshTypeFilters = foreach ($RefreshType in (Get-Variable -Name $PSItem -ValueOnly)) {
                     switch ($RefreshType) {
                         'Any Incremental' {
-                            "OR (col.RefreshType IN ('4','6')"
+                            "OR (col.RefreshType IN ('4','6'))"
                         }
                         'Periodic Updates Only' {
                             "OR (col.RefreshType = 2)"
@@ -265,6 +268,22 @@ AND col.{0} = '{1}'
                     }
                 }
                 [string]::Format("AND ({0})", ($($RefreshTypeFilters -join "`n").Trim().TrimStart('OR')))
+            }
+            'MWType' {
+                $MWTypeFilters = foreach ($MWType in (Get-Variable -Name $PSItem -ValueOnly)) {
+                    switch ($MWType) {
+                        'General' {
+                            "OR mw.ServiceWindowType = 1"
+                        }
+                        'Updates' {
+                            "OR mw.ServiceWindowType = 4"
+                        }
+                        'OSD' {
+                            "OR mw.ServiceWindowType = 5"
+                        }
+                    }
+                }
+                [string]::Format("AND ({0})", ($($MWTypeFilters -join "`n").Trim().TrimStart('OR')))
             }
             'HasAppDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
@@ -332,10 +351,10 @@ AND col.{0} = '{1}'
             }
             'MW_Enabled' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND mw.ServiceWindowType IS NOT NULL"
+                    "AND mw.Enabled = 1"
                 }
                 else {
-                    "AND mw.ServiceWindowType IS NULL"
+                    "AND mw.Enabled = 0"
                 }
             }
             'UsedAsExclude' {

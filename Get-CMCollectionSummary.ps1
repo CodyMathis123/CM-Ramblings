@@ -53,16 +53,21 @@ function Get-CMCollectionSummary {
     [CmdletBinding(DefaultParameterSetName = "__AllParameterSets")]
     #Requires -Modules DBATools
     param (
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $true, Position = 0)]
         [string]$SQLServer,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $true, Position = 1)]
         [string]$Database,
         [parameter(Mandatory = $false)]
         [switch]$WithNoDeployments,
         [parameter(Mandatory = $false)]
         [switch]$Unused,
         [parameter(Mandatory = $false)]
-        [switch]$Empty
+        [switch]$Empty,
+        [parameter(Mandatory = $false)]
+        [ValidateSet('Any Incremental', 'Periodic Updates Only', 'Non-Recurring Schedule'
+            , 'Non-Recurring Schedule and Incremental', 'Manual Updates Only'
+            , 'Incremental and Periodic Updates', 'Incremental Updates Only')]
+        [string[]]$RefreshType
     )
     DynamicParam {
         #region function New-DynamicParam - All credit to RamblingCookieMonster (https://github.com/RamblingCookieMonster/PowerShell/blob/master/New-DynamicParam.ps1)
@@ -232,6 +237,34 @@ AND col.{0} = '{1}'
             }
             'LimitToCollectionName' {
                 Get-WhereFilter -InputData $LimitToCollectionName -ColumnName $PSItem
+            }
+            'RefreshType' {
+                $RefreshTypeFilters = foreach ($RefreshType in (Get-Variable -Name $PSItem -ValueOnly)) {
+                    switch ($RefreshType) {
+                        'Any Incremental' {
+                            "OR (col.RefreshType IN ('4','6')"
+                        }
+                        'Periodic Updates Only' {
+                            "OR (col.RefreshType = 2)"
+                        }
+                        'Non-Recurring Schedule' {
+                            "OR (col.RefreshType = 2 AND RIGHT(col.Schedule,5) = '80000')"
+                        }
+                        'Non-Recurring Schedule and Incremental' {
+                            "OR (col.RefreshType = 6 AND RIGHT(col.Schedule,5) = '80000')"
+                        }
+                        'Manual Updates Only' {
+                            "OR (col.RefreshType = 1)"
+                        }
+                        'Incremental and Periodic Updates' {
+                            "OR (col.RefreshType = 6)"
+                        }
+                        'Incremental Updates Only' {
+                            "OR (col.RefreshType = 4)"
+                        }
+                    }
+                }
+                [string]::Format("AND ({0})", ($($RefreshTypeFilters -join "`n").Trim().TrimStart('OR')))
             }
             'HasAppDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {

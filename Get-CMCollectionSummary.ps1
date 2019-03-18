@@ -412,7 +412,7 @@ AND col.{0} = '{1}'
         SELECT DISTINCT col.CollectionName
         , col.SiteID AS CollectionID
         , col.MemberCount
-        , CASE
+        , CASE 
         WHEN (col.RefreshType = 1) THEN 'Manual Updates Only'
         WHEN (col.RefreshType = 2 AND RIGHT(col.Schedule,5) = '80000') THEN 'Non-Recurring Schedule'
         WHEN (col.RefreshType = 2) THEN 'Periodic Updates Only'
@@ -420,46 +420,26 @@ AND col.{0} = '{1}'
         WHEN (col.RefreshType = 6 AND RIGHT(col.Schedule,5) = '80000') THEN 'Non-Recurring Schedule and Incremental'
         WHEN (col.RefreshType = 6) THEN 'Incremental and Periodic Updates'
         END AS RefreshType
-        , col.Schedule AS 'Refresh ScheduleString'
+        , col.Schedule AS 'Refresh ScheduleString' 
         , (CAST(colrefresh.EvaluationLength AS Float)/1000.00) AS 'FullRefreshLength'
-        , CASE
+        , CASE 
         WHEN (col.RefreshType IN (4,6)) THEN (CAST(colrefresh.IncrementalEvaluationLength AS Float)/1000)
         END AS 'IncrementalRefreshLength'
         , CASE WHEN HasExcludes.DependentCollectionID IS NOT NULL THEN 1
         ELSE 0
         END AS 'HasExcludes'
-        , STUFF((SELECT ','+ Excludes.SourceCollectionID
-            FROM [dbo].[vSMS_CollectionDependencies] Excludes
-            WHERE Excludes.DependentCollectionID = col.SiteID and Excludes.RelationshipType = 3
-            FOR XML PATH('')),1,1,'') AS 'Excludes'
         , CASE WHEN UsedAsExclude.DependentCollectionID IS NOT NULL THEN 1
         ELSE 0
         END AS 'UsedAsExclude'
-        , STUFF((SELECT ','+ ExcludedFrom.DependentCollectionID
-            FROM [dbo].[vSMS_CollectionDependencies] ExcludedFrom
-            WHERE ExcludedFrom.SourceCollectionID = col.SiteID and ExcludedFrom.RelationshipType = 3
-            FOR XML PATH('')),1,1,'') AS 'ExcludedFrom'
         , CASE WHEN HasIncludes.DependentCollectionID IS NOT NULL THEN 1
         ELSE 0
         END AS 'HasIncludes'
-        , STUFF((SELECT ','+ Includes.SourceCollectionID
-            FROM [dbo].[vSMS_CollectionDependencies] Includes
-            WHERE Includes.DependentCollectionID = col.SiteID and Includes.RelationshipType = 2
-            FOR XML PATH('')),1,1,'') AS 'Includes'
         , CASE WHEN UsedAsInclude.DependentCollectionID IS NOT NULL THEN 1
         ELSE 0
         END AS 'UsedAsInclude'
-        , STUFF((SELECT ','+ IncludedIn.DependentCollectionID
-            FROM [dbo].[vSMS_CollectionDependencies] IncludedIn
-            WHERE IncludedIn.SourceCollectionID = col.SiteID and IncludedIn.RelationshipType = 2
-            FOR XML PATH('')),1,1,'') AS 'IncludedIn'
         , CASE WHEN UsedAsLimitingCollection.DependentCollectionID IS NOT NULL THEN 1
         ELSE 0
         END AS 'UsedAsLimitingCollection'
-        , STUFF((SELECT ','+ Limits.DependentCollectionID
-            FROM [dbo].[vSMS_CollectionDependencies] Limits
-            WHERE Limits.SourceCollectionID = col.SiteID and Limits.RelationshipType = 1
-            FOR XML PATH('')),1,1,'') AS 'Limits'
         , CASE WHEN HasPolicyDeployment.CollectionID IS NOT NULL THEN 1
         ELSE 0
         END AS 'HasPolicyDeployment'
@@ -482,7 +462,7 @@ AND col.{0} = '{1}'
         , mw.Description AS 'MW_Description'
         , mw.Schedules AS 'MW_ScheduleString'
         , mw.StartTime AS 'MW_StartTime'
-        , CASE
+        , CASE 
         WHEN mw.ServiceWindowType = 1	Then 'General'
         WHEN mw.ServiceWindowType = 4	Then 'Updates'
         WHEN mw.ServiceWindowType = 5	Then 'OSD'
@@ -494,7 +474,7 @@ AND col.{0} = '{1}'
         WHEN mw.RecurrenceType = 3 THEN 'Weekly'
         WHEN mw.RecurrenceType = 4 THEN 'Monthly By Weekday'
         WHEN mw.RecurrenceType = 5 THEN 'Monthly By Date'
-        END AS 'MW_Recurrence Type'
+        END AS 'MW_Recurrence_Type'
         , mw.Enabled AS 'MW_Enabled'
         , mw.UseGMTTimes AS 'MW_IsGMT'
         , col.LimitToCollectionName

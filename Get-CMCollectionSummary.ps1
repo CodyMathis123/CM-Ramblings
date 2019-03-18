@@ -1,76 +1,11 @@
 function Get-CMCollectionSummary {
-    <#
-    .SYNOPSIS
-        Gets a summary of information for specified collection(s)
-    .DESCRIPTION
-        Provides a large list of attributes for collections. Leverages DynamicParam to allow tab completion for filters.
-
-        Note: Current Help implementation in PowerShell does not allow both Dynamic Parameter help and Comment based help.
-            As an alternative, I'm populating this information in the Description area.
-
-        DYNAMIC PARAMETERS
-            -CollectionID <string[]>
-                Filter the summary based on CollectionID - Dynamic Parameter that will validate on your existing Collections
-
-                Required?                    false
-                Accept pipeline input?       false
-                Parameter set name           FilterByCollectionID
-                Aliases                      None
-                Dynamic?                     true
-
-            -CollectionName <string[]>
-                Filter the summary based on CollectionName - Dynamic Parameter that will validate on your existing Collections
-
-                Required?                    false
-                Accept pipeline input?       false
-                Parameter set name           FilterByCollectionName
-                Aliases                      None
-                Dynamic?                     true
-
-            -LimitToCollectionID <string[]>
-                Filter the summary based on LimitToCollectionID, which would return all collections limited by the specified CollectionID
-
-                Required?                    false
-                Accept pipeline input?       false
-                Parameter set name           FilterByLimitingCollectionID
-                Aliases                      None
-                Dynamic?                     true
-
-            -LimitToCollectionName <string[]>
-                Filter the summary based on LimitToCollectionName, which would return all collections limited by the specified CollectionName
-
-                Required?                    false
-                Accept pipeline input?       false
-                Parameter set name           FilterByLimitingCollectionName
-                Aliases                      None
-                Dynamic?                     true
-    .EXAMPLE
-        C:\PS> Get-CMCollectionSummary -SQLServer LAB-SCCM01 -Database CM_LAB -LimitToCollectionName 'All Systems'
-            Returns a summary for all collections limited by 'All Systems'
-    .NOTES
-        Initial DynamicParam load can take a second as it has to connect to SQL. Subsequent runs are much faster.
-    #>
     [CmdletBinding(DefaultParameterSetName = "__AllParameterSets")]
     #Requires -Modules DBATools
     param (
         [parameter(Mandatory = $true, Position = 0)]
         [string]$SQLServer,
         [parameter(Mandatory = $true, Position = 1)]
-        [string]$Database,
-        [parameter(Mandatory = $false)]
-        [switch]$WithNoDeployments,
-        [parameter(Mandatory = $false)]
-        [switch]$Unused,
-        [parameter(Mandatory = $false)]
-        [switch]$Empty,
-        [parameter(Mandatory = $false)]
-        [ValidateSet('Any Incremental', 'Periodic Updates Only', 'Non-Recurring Schedule'
-            , 'Non-Recurring Schedule and Incremental', 'Manual Updates Only'
-            , 'Incremental and Periodic Updates', 'Incremental Updates Only')]
-        [string[]]$RefreshType,
-        [parameter(Mandatory = $false)]
-        [ValidateSet('General', 'Updates', 'OSD')]
-        [string[]]$MWType
+        [string]$Database
     )
     DynamicParam {
         #region function New-DynamicParam - All credit to RamblingCookieMonster (https://github.com/RamblingCookieMonster/PowerShell/blob/master/New-DynamicParam.ps1)
@@ -152,15 +87,17 @@ order by
         $CollectionInfo = Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $RBAC_CollectionQuery
         #endregion RBAC enforced query to retrieve CollectionID and CollectionName
 
-        #region Generate dynamic parameters, each with their own ParamaterSetName
+        #region Generate dynamic parameters
+        $Position = 2
         foreach ($Var in @('CollectionID', 'CollectionName', 'LimitToCollectionID', 'LimitToCollectionName')) {
             $newDynamicParamSplat = @{
+                Position         = $Position++
                 HelpMessage      = "Filter collection summary results by the $Var field"
                 ParameterSetName = [string]::Format('FilterBy{0}', $Var)
                 DPDictionary     = $Dictionary
                 Mandatory        = $true
                 Type             = [string[]]
-                ValidateSet      = $($CollectionInfo.$Var | Where-Object { $PSItem.ToString().Trim() } | Select-Object -Unique)
+                ValidateSet      = $(@($CollectionInfo.$Var) | Where-Object { @($PSItem).ToString().Trim() } | Select-Object -Unique)
                 Name             = $Var
             }
             New-DynamicParam @newDynamicParamSplat
@@ -173,6 +110,8 @@ order by
                 , 'MW_Enabled', 'UsedAsExclude'
                 , 'UsedAsInclude', 'UsedAsLimitingCollection')) {
             $newDynamicParamSplat = @{
+                Position     = $Position++
+                HelpMessage  = "Filter collection summary results based on $Var being `$true or `$false"
                 DPDictionary = $Dictionary
                 Mandatory    = $false
                 Type         = [bool]
@@ -180,8 +119,53 @@ order by
             }
             New-DynamicParam @newDynamicParamSplat
         }
-        #endregion Generate dynamic parameters, each with their own ParamaterSetName
+        $newDynamicParamSplat = @{
+            DPDictionary = $Dictionary
+            Position     = $Position++
+            Name         = 'WithNoDeployments'
+            Type         = [switch]
+            HelpMessage  = "Return all collections which have no deployments"
+        }
+        New-DynamicParam @newDynamicParamSplat
+        $newDynamicParamSplat = @{
+            DPDictionary = $Dictionary
+            Position     = $Position++
+            Name         = 'Unused'
+            Type         = [switch]
+            HelpMessage  = "Return all collections which have no deployments, and are not included in, ecluded from, or limiting other collecitons"
+        }
+        New-DynamicParam @newDynamicParamSplat
+        $newDynamicParamSplat = @{
+            DPDictionary = $Dictionary
+            Position     = $Position++
+            Name         = 'Empty'
+            Type         = [switch]
+            HelpMessage  = "Returns all collections with 0 members"
+        }
+        New-DynamicParam @newDynamicParamSplat
 
+        $RefreshTypeValidationSet = @('Any Incremental', 'Periodic Updates Only', 'Non-Recurring Schedule'
+            , 'Non-Recurring Schedule and Incremental', 'Manual Updates Only'
+            , 'Incremental and Periodic Updates', 'Incremental Updates Only')
+        $newDynamicParamSplat = @{
+            DPDictionary = $Dictionary
+            Position     = $Position++
+            Name         = 'RefreshType'
+            Type         = [string[]]
+            ValidateSet  = $RefreshTypeValidationSet
+        }
+        New-DynamicParam @newDynamicParamSplat
+
+        $MWTypeValidationSet = @('General', 'Updates', 'OSD')
+        $newDynamicParamSplat = @{
+            DPDictionary = $Dictionary
+            Position     = $Position++
+            Name         = 'MWType'
+            Type         = [string[]]
+            ValidateSet  = $MWTypeValidationSet
+        }
+        New-DynamicParam @newDynamicParamSplat
+        #endregion Generate dynamic parameters
         $Dictionary
     }
     begin {

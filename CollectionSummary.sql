@@ -1,4 +1,5 @@
-        SELECT DISTINCT col.CollectionName
+
+SELECT DISTINCT col.CollectionName
         , col.SiteID AS CollectionID
         , col.MemberCount
         , CASE 
@@ -69,19 +70,19 @@
         , col.LimitToCollectionName
         , col.LimitToCollectionID
         , col.LastMemberChangeTime
-        FROM [dbo].[v_Collections] as col
-            LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] clients ON clients.CollectionID = col.SiteID
-            LEFT JOIN [dbo].[vDeploymentSummary] deploys ON deploys.CollectionID = col.SiteID
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] HasExcludes ON HasExcludes.DependentCollectionID = col.SiteID AND HasExcludes.RelationshipType = 3
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsExclude ON UsedAsExclude.SourceCollectionID = col.SiteID AND UsedAsExclude.RelationshipType = 3
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] HasIncludes ON HasIncludes.DependentCollectionID = col.SiteID AND HasIncludes.RelationshipType = 2
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsInclude ON UsedAsInclude.SourceCollectionID = col.SiteID AND UsedAsInclude.RelationshipType = 2
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsLimitingCollection ON UsedAsLimitingCollection.SourceCollectionID = col.SiteID AND UsedAsLimitingCollection.RelationshipType = 1
-            LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] HasPolicyDeployment ON HasPolicyDeployment.CollectionID = col.SiteID
-            LEFT JOIN [dbo].[vDeploymentSummary] HasAppDeployment ON HasAppDeployment.CollectionID = col.SiteID AND HasAppDeployment.FeatureType = 1
-            LEFT JOIN [dbo].[vDeploymentSummary] HasPackageDeployment ON HasPackageDeployment.CollectionID = col.SiteID AND HasPackageDeployment.FeatureType = 2
-            LEFT JOIN [dbo].[vDeploymentSummary] HasUpdateDeployment ON HasUpdateDeployment.CollectionID = col.SiteID AND HasUpdateDeployment.FeatureType = 5
-            LEFT JOIN [dbo].[vDeploymentSummary] HasBaselineDeployment ON HasBaselineDeployment.CollectionID = col.SiteID AND HasBaselineDeployment.FeatureType = 6
-            LEFT JOIN [dbo].[vDeploymentSummary] HasTaskSequenceDeployment ON HasTaskSequenceDeployment.CollectionID = col.SiteID AND HasTaskSequenceDeployment.FeatureType = 7
-            LEFT JOIN [dbo].[Collections_L] colrefresh ON colrefresh.CollectionID = col.CollectionID
-            LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
+FROM [dbo].[v_Collections] as col
+    LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] clients ON clients.CollectionID = col.SiteID
+    LEFT JOIN [dbo].[vDeploymentSummary] deploys ON deploys.CollectionID = col.SiteID
+    LEFT JOIN [dbo].[vSMS_CollectionDependencies] HasExcludes ON HasExcludes.DependentCollectionID = col.SiteID AND HasExcludes.RelationshipType = 3
+    LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsExclude ON UsedAsExclude.SourceCollectionID = col.SiteID AND UsedAsExclude.RelationshipType = 3
+    LEFT JOIN [dbo].[vSMS_CollectionDependencies] HasIncludes ON HasIncludes.DependentCollectionID = col.SiteID AND HasIncludes.RelationshipType = 2
+    LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsInclude ON UsedAsInclude.SourceCollectionID = col.SiteID AND UsedAsInclude.RelationshipType = 2
+    LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsLimitingCollection ON UsedAsLimitingCollection.SourceCollectionID = col.SiteID AND UsedAsLimitingCollection.RelationshipType = 1
+    LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] HasPolicyDeployment ON HasPolicyDeployment.CollectionID = col.SiteID
+    LEFT JOIN [dbo].[vDeploymentSummary] HasAppDeployment ON HasAppDeployment.CollectionID = col.SiteID AND HasAppDeployment.FeatureType = 1
+    LEFT JOIN [dbo].[vDeploymentSummary] HasPackageDeployment ON HasPackageDeployment.CollectionID = col.SiteID AND HasPackageDeployment.FeatureType = 2
+    LEFT JOIN [dbo].[vDeploymentSummary] HasUpdateDeployment ON HasUpdateDeployment.CollectionID = col.SiteID AND HasUpdateDeployment.FeatureType = 5
+    LEFT JOIN [dbo].[vDeploymentSummary] HasBaselineDeployment ON HasBaselineDeployment.CollectionID = col.SiteID AND HasBaselineDeployment.FeatureType = 6
+    LEFT JOIN [dbo].[vDeploymentSummary] HasTaskSequenceDeployment ON HasTaskSequenceDeployment.CollectionID = col.SiteID AND HasTaskSequenceDeployment.FeatureType = 7
+    LEFT JOIN [dbo].[Collections_L] colrefresh ON colrefresh.CollectionID = col.CollectionID
+    LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID

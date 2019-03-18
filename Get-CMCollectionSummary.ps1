@@ -152,7 +152,7 @@ order by
                 DPDictionary     = $Dictionary
                 Mandatory        = $true
                 Type             = [string[]]
-                ValidateSet      = $($CollectionInfo.$Var | Where-Object { $PSItem.Trim() } | Select-Object -Unique)
+                ValidateSet      = $($CollectionInfo.$Var | Where-Object { $PSItem.ToString().Trim() } | Select-Object -Unique)
                 Name             = $Var
             }
             New-DynamicParam @newDynamicParamSplat

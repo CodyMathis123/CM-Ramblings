@@ -436,7 +436,7 @@ AND col.{0} = '{1}'
         , SUM(CASE WHEN FeatureType = 7 THEN 1 ELSE 0 END) AS CountOfTSDeployments
         , SUM(CASE WHEN deppol.CollectionID IS NOT NULL THEN 1 ELSE 0 END) AS CountOfPolicyDeployments
         INTO #coldeploy
-        FROM [dbo].[v_Collections] as col 
+        FROM [dbo].[v_Collections] as col
             LEFT JOIN [dbo].[vDeploymentSummary] deployments on deployments.CollectionID = col.SiteID
             LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] deppol ON deppol.CollectionID = col.SiteID
         GROUP BY col.SiteID
@@ -462,31 +462,31 @@ AND col.{0} = '{1}'
         , coldep.CountOfIncludes
         , coldep.CountOfIncludedIn
         , coldep.CountOfLimitedBy
-        , CASE WHEN coldeploy.CountOfAppDeployments >= 0 THEN coldeploy.CountOfAppDeployments ELSE 0 END AS CountOfAppDeployments
-        , CASE WHEN coldeploy.CountOfPackageDeployments >= 0 THEN coldeploy.CountOfPackageDeployments ELSE 0 END AS CountOfPackageDeployments
-        , CASE WHEN coldeploy.CountOfUpdateDeployments >= 0 THEN coldeploy.CountOfUpdateDeployments ELSE 0 END AS CountOfUpdateDeployments
-        , CASE WHEN coldeploy.CountOfBaselineDeployments >= 0 THEN coldeploy.CountOfBaselineDeployments ELSE 0 END AS CountOfBaselineDeployments
-        , CASE WHEN coldeploy.CountOfTSDeployments >= 0 THEN coldeploy.CountOfTSDeployments ELSE 0 END AS CountOfTSDeployments
-        , CASE WHEN coldeploy.CountOfPolicyDeployments >= 0 THEN coldeploy.CountOfPolicyDeployments ELSE 0 END AS CountOfPolicyDeployments
-        , mw.Name AS 'MW_Name'
-        , mw.Description AS 'MW_Description'
-        , mw.Schedules AS 'MW_ScheduleString'
-        , mw.StartTime AS 'MW_StartTime'
+        , coldeploy.CountOfAppDeployments
+        , coldeploy.CountOfPackageDeployments
+        , coldeploy.CountOfUpdateDeployments
+        , coldeploy.CountOfBaselineDeployments
+        , coldeploy.CountOfTSDeployments
+        , coldeploy.CountOfPolicyDeployments
+        , mw.Name AS 'MW Name'
+        , mw.Description AS 'MW Description'
+        , mw.Schedules AS 'MW ScheduleString'
+        , mw.StartTime AS 'MW StartTime'
         , CASE 
         WHEN mw.ServiceWindowType = 1	Then 'General'
         WHEN mw.ServiceWindowType = 4	Then 'Updates'
         WHEN mw.ServiceWindowType = 5	Then 'OSD'
-        END AS 'MW_Type'
-        , mw.Duration AS 'MW_Duration_in_Minutes'
+        END AS 'MW Type'
+        , mw.Duration AS 'MW Duration in Minutes'
         , CASE
         WHEN mw.RecurrenceType = 1 THEN 'None'
         WHEN mw.RecurrenceType = 2 THEN 'Daily'
         WHEN mw.RecurrenceType = 3 THEN 'Weekly'
         WHEN mw.RecurrenceType = 4 THEN 'Monthly By Weekday'
         WHEN mw.RecurrenceType = 5 THEN 'Monthly By Date'
-        END AS 'MW_Recurrence_Type'
-        , mw.Enabled AS 'MW_Enabled'
-        , mw.UseGMTTimes AS 'MW_IsGMT'
+        END AS 'MW Recurrence Type'
+        , mw.Enabled AS 'MW Enabled'
+        , mw.UseGMTTimes AS 'MW IsGMT'
         , col.LimitToCollectionName
         , col.LimitToCollectionID
         , col.LastMemberChangeTime

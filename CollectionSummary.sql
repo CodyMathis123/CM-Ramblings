@@ -57,12 +57,12 @@ END AS 'IncrementalRefreshLength'
 , coldep.CountOfIncludes
 , coldep.CountOfIncludedIn
 , coldep.CountOfLimitedBy
-, CASE WHEN coldeploy.CountOfAppDeployments >= 0 THEN coldeploy.CountOfAppDeployments ELSE 0 END AS CountOfAppDeployments
-, CASE WHEN coldeploy.CountOfPackageDeployments >= 0 THEN coldeploy.CountOfPackageDeployments ELSE 0 END AS CountOfPackageDeployments
-, CASE WHEN coldeploy.CountOfUpdateDeployments >= 0 THEN coldeploy.CountOfUpdateDeployments ELSE 0 END AS CountOfUpdateDeployments
-, CASE WHEN coldeploy.CountOfBaselineDeployments >= 0 THEN coldeploy.CountOfBaselineDeployments ELSE 0 END AS CountOfBaselineDeployments
-, CASE WHEN coldeploy.CountOfTSDeployments >= 0 THEN coldeploy.CountOfTSDeployments ELSE 0 END AS CountOfTSDeployments
-, CASE WHEN coldeploy.CountOfPolicyDeployments >= 0 THEN coldeploy.CountOfPolicyDeployments ELSE 0 END AS CountOfPolicyDeployments
+, coldeploy.CountOfAppDeployments
+, coldeploy.CountOfPackageDeployments
+, coldeploy.CountOfUpdateDeployments
+, coldeploy.CountOfBaselineDeployments
+, coldeploy.CountOfTSDeployments
+, coldeploy.CountOfPolicyDeployments
 , mw.Name AS 'MW Name'
 , mw.Description AS 'MW Description'
 , mw.Schedules AS 'MW ScheduleString'

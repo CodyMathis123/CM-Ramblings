@@ -273,66 +273,50 @@ AND col.{0} = '{1}'
             }
             'HasAppDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasAppDeployment.CollectionID IS NOT NULL"
+                    "AND coldeploy.CountOfAppDeployments > 0"
                 }
                 else {
-                    "AND HasAppDeployment.CollectionID IS NULL"
+                    "AND coldeploy.CountOfAppDeployments = 0"
                 }
             }
             'HasBaselineDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasBaselineDeployment.CollectionID IS NOT NULL"
+                    "AND coldeploy.CountOfBaselineDeployments > 0"
                 }
                 else {
-                    "AND HasBaselineDeployment.CollectionID IS NULL"
-                }
-            }
-            'HasExcludes' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasExcludes.DependentCollectionID IS NOT NULL"
-                }
-                else {
-                    "AND HasExcludes.DependentCollectionID IS NULL"
-                }
-            }
-            'HasIncludes' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasIncludes.DependentCollectionID IS NOT NULL"
-                }
-                else {
-                    "AND HasIncludes.DependentCollectionID IS NULL"
+                    "AND coldeploy.CountOfBaselineDeployments = 0"
                 }
             }
             'HasPackageDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasPackageDeployment.CollectionID IS NOT NULL"
+                    "AND coldeploy.CountOfPackageDeployments > 0"
                 }
                 else {
-                    "AND HasPackageDeployment.CollectionID IS NULL"
+                    "AND coldeploy.CountOfPackageDeployments = 0"
                 }
             }
             'HasPolicyDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasPolicyDeployment.CollectionID IS NOT NULL"
+                    "AND coldeploy.CountOfPolicyDeployments > 0"
                 }
                 else {
-                    "AND HasPolicyDeployment.CollectionID IS NULL"
+                    "AND coldeploy.CountOfPolicyDeployments = 0"
                 }
             }
             'HasTaskSequenceDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasTaskSequenceDeployment.CollectionID IS NOT NULL"
+                    "AND coldeploy.CountOfTSDeployments > 0"
                 }
                 else {
-                    "AND HasTaskSequenceDeployment.CollectionID IS NULL"
+                    "AND coldeploy.CountOfTSDeployments = 0"
                 }
             }
             'HasUpdateDeployment' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND HasUpdateDeployment.CollectionID IS NOT NULL"
+                    "AND coldeploy.CountOfUpdateDeployments > 0"
                 }
                 else {
-                    "AND HasUpdateDeployment.CollectionID IS NULL"
+                    "AND coldeploy.CountOfUpdateDeployments = 0"
                 }
             }
             'MW_Enabled' {
@@ -343,54 +327,70 @@ AND col.{0} = '{1}'
                     "AND mw.Enabled = 0"
                 }
             }
-            'UsedAsExclude' {
+            'HasExcludes' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND UsedAsExclude.SourceCollectionID IS NOT NULL"
+                    "AND coldep.CountOfExcludes > 0"
                 }
                 else {
-                    "AND UsedAsExclude.SourceCollectionID IS NULL"
+                    "AND coldep.CountOfExcludes = 0"
+                }
+            }
+            'HasIncludes' {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
+                    "AND coldep.CountOfIncludes > 0"
+                }
+                else {
+                    "AND coldep.CountOfIncludes = 0"
+                }
+            }
+            'UsedAsExclude' {
+                if (Get-Variable -Name $PSItem -ValueOnly) {
+                    "AND coldep.CountOfExcludedFrom > 0"
+                }
+                else {
+                    "AND coldep.CountOfExcludedFrom = 0"
                 }
             }
             'UsedAsInclude' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND UsedAsInclude.DependentCollectionID IS NOT NULL"
+                    "AND coldep.CountOfIncludedIn > 0"
                 }
                 else {
-                    "AND UsedAsInclude.DependentCollectionID IS NULL"
+                    "AND coldep.CountOfIncludedIn = 0"
                 }
             }
             'UsedAsLimitingCollection' {
                 if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND UsedAsLimitingCollection.DependentCollectionID IS NOT NULL"
+                    "AND coldep.CountOfLimitedBy > 0"
                 }
                 else {
-                    "AND UsedAsLimitingCollection.DependentCollectionID IS NULL"
+                    "AND coldep.CountOfLimitedBy = 0"
                 }
             }
             default {
                 switch ($true) {
                     $WithNoDeployments {
                         @"
-                    AND HasAppDeployment.CollectionID IS NULL
-                    AND HasBaselineDeployment.CollectionID IS NULL
-                    AND HasPackageDeployment.CollectionID IS NULL
-                    AND HasPolicyDeployment.CollectionID IS NULL
-                    AND HasTaskSequenceDeployment.CollectionID IS NULL
-                    AND HasUpdateDeployment.CollectionID IS NULL
+                        AND CountOfAppDeployments = 0
+                        AND CountOfPackageDeployments = 0
+                        AND CountOfUpdateDeployments = 0
+                        AND CountOfBaselineDeployments = 0
+                        AND CountOfTSDeployments = 0
+                        AND CountOfPolicyDeployments = 0
 "@
                     }
                     $Unused {
                         @"
-                    AND HasAppDeployment.CollectionID IS NULL
-                    AND HasBaselineDeployment.CollectionID IS NULL
-                    AND HasPackageDeployment.CollectionID IS NULL
-                    AND HasPolicyDeployment.CollectionID IS NULL
-                    AND HasTaskSequenceDeployment.CollectionID IS NULL
-                    AND HasUpdateDeployment.CollectionID IS NULL
-                    AND mw.ServiceWindowType IS NULL
-                    AND UsedAsExclude.SourceCollectionID IS NULL
-                    AND UsedAsInclude.DependentCollectionID IS NULL
-                    AND UsedAsLimitingCollection.DependentCollectionID IS NULL
+                        AND CountOfAppDeployments = 0
+                        AND CountOfPackageDeployments = 0
+                        AND CountOfUpdateDeployments = 0
+                        AND CountOfBaselineDeployments = 0
+                        AND CountOfTSDeployments = 0
+                        AND CountOfPolicyDeployments = 0
+                        AND mw.ServiceWindowType IS NULL
+                        AND CountOfExcludedFrom = 0
+                        AND CountOfIncludedIn = 0
+                        AND CountOfLimitedBy = 0
 "@
                     }
                     $Empty {
@@ -409,6 +409,38 @@ AND col.{0} = '{1}'
     }
     process {
         $CollectionSummaryQuery = [string]::Format(@"
+        SELECT colref.SiteID AS CollectionID
+        , MAX(EvaluationLength) AS EvaluationLength
+        , MAX(IncrementalEvaluationLength) AS IncrementalEvaluationLength
+        INTO #colrefresh
+        FROM [dbo].[v_Collections] as colref
+            LEFT JOIN [dbo].[Collections_L] col ON col.CollectionID = colref.CollectionID
+        GROUP BY colref.SiteID
+        
+        SELECT CAST(col.SiteID AS varchar) AS CollectionID
+        , SUM(CASE WHEN coldep.DependentCollectionID = col.SiteID AND coldep.RelationshipType = 3 THEN 1 ELSE 0 END) AS CountOfExcludes
+        , SUM(CASE WHEN coldep.DependentCollectionID = col.SiteID AND coldep.RelationshipType = 2 THEN 1 ELSE 0 END) AS CountOfIncludes
+        , SUM(CASE WHEN coldep.SourceCollectionID = col.SiteID AND coldep.RelationshipType = 3 THEN 1 ELSE 0 END) AS CountOfExcludedFrom
+        , SUM(CASE WHEN coldep.SourceCollectionID = col.SiteID AND coldep.RelationshipType = 2 THEN 1 ELSE 0 END) AS CountOfIncludedIn
+        , SUM(CASE WHEN coldep.SourceCollectionID = col.SiteID AND coldep.RelationshipType = 1 THEN 1 ELSE 0 END) AS CountOfLimitedBy
+        INTO #coldep
+        FROM [dbo].[v_Collections] as col
+            LEFT JOIN [dbo].[vSMS_CollectionDependencies] coldep ON (coldep.DependentCollectionID = col.SiteID OR coldep.SourceCollectionID = col.SiteID)
+        GROUP BY col.SiteID
+        
+        SELECT col.SiteID AS CollectionID
+        , SUM(CASE WHEN FeatureType = 1 THEN 1 ELSE 0 END) AS CountOfAppDeployments
+        , SUM(CASE WHEN FeatureType = 2 THEN 1 ELSE 0 END) AS CountOfPackageDeployments
+        , SUM(CASE WHEN FeatureType = 5 THEN 1 ELSE 0 END) AS CountOfUpdateDeployments
+        , SUM(CASE WHEN FeatureType = 6 THEN 1 ELSE 0 END) AS CountOfBaselineDeployments
+        , SUM(CASE WHEN FeatureType = 7 THEN 1 ELSE 0 END) AS CountOfTSDeployments
+        , SUM(CASE WHEN deppol.CollectionID IS NOT NULL THEN 1 ELSE 0 END) AS CountOfPolicyDeployments
+        INTO #coldeploy
+        FROM [dbo].[v_Collections] as col 
+            LEFT JOIN [dbo].[vDeploymentSummary] deployments on deployments.CollectionID = col.SiteID
+            LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] deppol ON deppol.CollectionID = col.SiteID
+        GROUP BY col.SiteID
+        
         SELECT DISTINCT col.CollectionName
         , col.SiteID AS CollectionID
         , col.MemberCount
@@ -425,39 +457,17 @@ AND col.{0} = '{1}'
         , CASE 
         WHEN (col.RefreshType IN (4,6)) THEN (CAST(colrefresh.IncrementalEvaluationLength AS Float)/1000)
         END AS 'IncrementalRefreshLength'
-        , CASE WHEN HasExcludes.DependentCollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasExcludes'
-        , CASE WHEN UsedAsExclude.DependentCollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'UsedAsExclude'
-        , CASE WHEN HasIncludes.DependentCollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasIncludes'
-        , CASE WHEN UsedAsInclude.DependentCollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'UsedAsInclude'
-        , CASE WHEN UsedAsLimitingCollection.DependentCollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'UsedAsLimitingCollection'
-        , CASE WHEN HasPolicyDeployment.CollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasPolicyDeployment'
-        , CASE WHEN HasAppDeployment.CollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasAppDeployment'
-        , CASE WHEN HasPackageDeployment.CollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasPackageDeployment'
-        , CASE WHEN HasBaselineDeployment.CollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasBaselineDeployment'
-        , CASE WHEN HasTaskSequenceDeployment.CollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasTaskSequenceDeployment'
-        , CASE WHEN HasUpdateDeployment.CollectionID IS NOT NULL THEN 1
-        ELSE 0
-        END AS 'HasUpdateDeployment'
+        , coldep.CountOfExcludes
+        , coldep.CountOfExcludedFrom
+        , coldep.CountOfIncludes
+        , coldep.CountOfIncludedIn
+        , coldep.CountOfLimitedBy
+        , CASE WHEN coldeploy.CountOfAppDeployments >= 0 THEN coldeploy.CountOfAppDeployments ELSE 0 END AS CountOfAppDeployments
+        , CASE WHEN coldeploy.CountOfPackageDeployments >= 0 THEN coldeploy.CountOfPackageDeployments ELSE 0 END AS CountOfPackageDeployments
+        , CASE WHEN coldeploy.CountOfUpdateDeployments >= 0 THEN coldeploy.CountOfUpdateDeployments ELSE 0 END AS CountOfUpdateDeployments
+        , CASE WHEN coldeploy.CountOfBaselineDeployments >= 0 THEN coldeploy.CountOfBaselineDeployments ELSE 0 END AS CountOfBaselineDeployments
+        , CASE WHEN coldeploy.CountOfTSDeployments >= 0 THEN coldeploy.CountOfTSDeployments ELSE 0 END AS CountOfTSDeployments
+        , CASE WHEN coldeploy.CountOfPolicyDeployments >= 0 THEN coldeploy.CountOfPolicyDeployments ELSE 0 END AS CountOfPolicyDeployments
         , mw.Name AS 'MW_Name'
         , mw.Description AS 'MW_Description'
         , mw.Schedules AS 'MW_ScheduleString'
@@ -466,8 +476,8 @@ AND col.{0} = '{1}'
         WHEN mw.ServiceWindowType = 1	Then 'General'
         WHEN mw.ServiceWindowType = 4	Then 'Updates'
         WHEN mw.ServiceWindowType = 5	Then 'OSD'
-        END AS 'MW Type'
-        , mw.Duration AS 'MW Duration in Minutes'
+        END AS 'MW_Type'
+        , mw.Duration AS 'MW_Duration_in_Minutes'
         , CASE
         WHEN mw.RecurrenceType = 1 THEN 'None'
         WHEN mw.RecurrenceType = 2 THEN 'Daily'
@@ -480,21 +490,12 @@ AND col.{0} = '{1}'
         , col.LimitToCollectionName
         , col.LimitToCollectionID
         , col.LastMemberChangeTime
-        FROM [dbo].[v_Collections] as col
+        FROM [dbo].[v_Collections] AS col
             LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] clients ON clients.CollectionID = col.SiteID
             LEFT JOIN [dbo].[vDeploymentSummary] deploys ON deploys.CollectionID = col.SiteID
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] HasExcludes ON HasExcludes.DependentCollectionID = col.SiteID AND HasExcludes.RelationshipType = 3
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsExclude ON UsedAsExclude.SourceCollectionID = col.SiteID AND UsedAsExclude.RelationshipType = 3
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] HasIncludes ON HasIncludes.DependentCollectionID = col.SiteID AND HasIncludes.RelationshipType = 2
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsInclude ON UsedAsInclude.SourceCollectionID = col.SiteID AND UsedAsInclude.RelationshipType = 2
-            LEFT JOIN [dbo].[vSMS_CollectionDependencies] UsedAsLimitingCollection ON UsedAsLimitingCollection.SourceCollectionID = col.SiteID AND UsedAsLimitingCollection.RelationshipType = 1
-            LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] HasPolicyDeployment ON HasPolicyDeployment.CollectionID = col.SiteID
-            LEFT JOIN [dbo].[vDeploymentSummary] HasAppDeployment ON HasAppDeployment.CollectionID = col.SiteID AND HasAppDeployment.FeatureType = 1
-            LEFT JOIN [dbo].[vDeploymentSummary] HasPackageDeployment ON HasPackageDeployment.CollectionID = col.SiteID AND HasPackageDeployment.FeatureType = 2
-            LEFT JOIN [dbo].[vDeploymentSummary] HasUpdateDeployment ON HasUpdateDeployment.CollectionID = col.SiteID AND HasUpdateDeployment.FeatureType = 5
-            LEFT JOIN [dbo].[vDeploymentSummary] HasBaselineDeployment ON HasBaselineDeployment.CollectionID = col.SiteID AND HasBaselineDeployment.FeatureType = 6
-            LEFT JOIN [dbo].[vDeploymentSummary] HasTaskSequenceDeployment ON HasTaskSequenceDeployment.CollectionID = col.SiteID AND HasTaskSequenceDeployment.FeatureType = 7
-            LEFT JOIN [dbo].[Collections_L] colrefresh ON colrefresh.CollectionID = col.CollectionID
+            LEFT JOIN #coldeploy AS coldeploy ON coldeploy.CollectionID = col.SiteID
+            LEFT JOIN #colrefresh AS colrefresh ON colrefresh.CollectionID = col.SiteID
+            LEFT JOIN #coldep AS coldep ON coldep.CollectionID = col.SiteID
             LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
             {0}
 "@, $WhereFilter)

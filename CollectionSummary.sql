@@ -1,28 +1,48 @@
-IF OBJECT_ID('tempdb..#colrefresh') IS NOT NULL DROP TABLE #colrefresh
-GO
+DECLARE @ColRefresh TABLE
+(
+    CollectionID varchar(8),
+    EvaluationLength int,
+    IncrementalEvaluationLength int
+)
+INSERT INTO @ColRefresh (CollectionID, EvaluationLength, IncrementalEvaluationLength)
 SELECT col.SiteID AS CollectionID
 , MAX(EvaluationLength) AS EvaluationLength
 , MAX(IncrementalEvaluationLength) AS IncrementalEvaluationLength
-INTO #colrefresh
 FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[Collections_L] colref ON colref.CollectionID = col.CollectionID
 GROUP BY col.SiteID
 
-IF OBJECT_ID('tempdb..#coldep') IS NOT NULL DROP TABLE #coldep
-GO
+DECLARE @ColDependencies TABLE
+(
+    CollectionID varchar(8)
+    , CountOfExcludes int
+    , CountOfIncludes int
+    , CountOfExcludedFrom int
+    , CountOfIncludedIn int
+    , CountOfLimitedBy int
+)
+INSERT INTO @ColDependencies (CollectionID, CountOfExcludes, CountOfIncludes, CountOfExcludedFrom, CountOfIncludedIn, CountOfLimitedBy)
 SELECT CAST(col.SiteID AS varchar) AS CollectionID
 , SUM(CASE WHEN coldep.DependentCollectionID = col.SiteID AND coldep.RelationshipType = 3 THEN 1 ELSE 0 END) AS CountOfExcludes
 , SUM(CASE WHEN coldep.DependentCollectionID = col.SiteID AND coldep.RelationshipType = 2 THEN 1 ELSE 0 END) AS CountOfIncludes
 , SUM(CASE WHEN coldep.SourceCollectionID = col.SiteID AND coldep.RelationshipType = 3 THEN 1 ELSE 0 END) AS CountOfExcludedFrom
 , SUM(CASE WHEN coldep.SourceCollectionID = col.SiteID AND coldep.RelationshipType = 2 THEN 1 ELSE 0 END) AS CountOfIncludedIn
 , SUM(CASE WHEN coldep.SourceCollectionID = col.SiteID AND coldep.RelationshipType = 1 THEN 1 ELSE 0 END) AS CountOfLimitedBy
-INTO #coldep
 FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[vSMS_CollectionDependencies] coldep ON (coldep.DependentCollectionID = col.SiteID OR coldep.SourceCollectionID = col.SiteID)
 GROUP BY col.SiteID
 
-IF OBJECT_ID('tempdb..#coldeploy') IS NOT NULL DROP TABLE #coldeploy
-GO
+DECLARE @ColDeployments TABLE
+(
+    CollectionID varchar(8)
+    , CountOfAppDeployments int
+    , CountOfPackageDeployments int
+    , CountOfUpdateDeployments int
+    , CountOfBaselineDeployments int
+    , CountOfTSDeployments int
+    , CountOfPolicyDeployments int
+)
+INSERT INTO @ColDeployments (CollectionID, CountOfAppDeployments, CountOfPackageDeployments, CountOfUpdateDeployments, CountOfBaselineDeployments, CountOfTSDeployments, CountOfPolicyDeployments)
 SELECT col.SiteID AS CollectionID
 , SUM(CASE WHEN FeatureType = 1 THEN 1 ELSE 0 END) AS CountOfAppDeployments
 , SUM(CASE WHEN FeatureType = 2 THEN 1 ELSE 0 END) AS CountOfPackageDeployments
@@ -30,7 +50,6 @@ SELECT col.SiteID AS CollectionID
 , SUM(CASE WHEN FeatureType = 6 THEN 1 ELSE 0 END) AS CountOfBaselineDeployments
 , SUM(CASE WHEN FeatureType = 7 THEN 1 ELSE 0 END) AS CountOfTSDeployments
 , SUM(CASE WHEN deppol.CollectionID IS NOT NULL THEN 1 ELSE 0 END) AS CountOfPolicyDeployments
-INTO #coldeploy
 FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[vDeploymentSummary] deployments on deployments.CollectionID = col.SiteID
     LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] deppol ON deppol.CollectionID = col.SiteID
@@ -88,7 +107,7 @@ END AS 'MW Recurrence Type'
 FROM [dbo].[v_Collections] AS col
     LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] clients ON clients.CollectionID = col.SiteID
     LEFT JOIN [dbo].[vDeploymentSummary] deploys ON deploys.CollectionID = col.SiteID
-    LEFT JOIN #coldeploy AS coldeploy ON coldeploy.CollectionID = col.SiteID
-    LEFT JOIN #colrefresh AS colrefresh ON colrefresh.CollectionID = col.SiteID
-    LEFT JOIN #coldep AS coldep ON coldep.CollectionID = col.SiteID
+    LEFT JOIN @ColDeployments AS coldeploy ON coldeploy.CollectionID = col.SiteID
+    LEFT JOIN @ColRefresh AS colrefresh ON colrefresh.CollectionID = col.SiteID
+    LEFT JOIN @ColDependencies AS coldep ON coldep.CollectionID = col.SiteID
     LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID

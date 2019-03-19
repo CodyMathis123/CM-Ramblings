@@ -409,13 +409,13 @@ AND col.{0} = '{1}'
     }
     process {
         $CollectionSummaryQuery = [string]::Format(@"
-        SELECT colref.SiteID AS CollectionID
+        SELECT col.SiteID AS CollectionID
         , MAX(EvaluationLength) AS EvaluationLength
         , MAX(IncrementalEvaluationLength) AS IncrementalEvaluationLength
         INTO #colrefresh
-        FROM [dbo].[v_Collections] as colref
-            LEFT JOIN [dbo].[Collections_L] col ON col.CollectionID = colref.CollectionID
-        GROUP BY colref.SiteID
+        FROM [dbo].[v_Collections] as col
+            LEFT JOIN [dbo].[Collections_L] colref ON colref.CollectionID = col.CollectionID
+        GROUP BY col.SiteID
         
         SELECT CAST(col.SiteID AS varchar) AS CollectionID
         , SUM(CASE WHEN coldep.DependentCollectionID = col.SiteID AND coldep.RelationshipType = 3 THEN 1 ELSE 0 END) AS CountOfExcludes

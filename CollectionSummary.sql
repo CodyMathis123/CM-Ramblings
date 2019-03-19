@@ -1,12 +1,12 @@
 IF OBJECT_ID('tempdb..#colrefresh') IS NOT NULL DROP TABLE #colrefresh
 GO
-SELECT colref.SiteID AS CollectionID
+SELECT col.SiteID AS CollectionID
 , MAX(EvaluationLength) AS EvaluationLength
 , MAX(IncrementalEvaluationLength) AS IncrementalEvaluationLength
 INTO #colrefresh
-FROM [dbo].[v_Collections] as colref
-    LEFT JOIN [dbo].[Collections_L] col ON col.CollectionID = colref.CollectionID
-GROUP BY colref.SiteID
+FROM [dbo].[v_Collections] as col
+    LEFT JOIN [dbo].[Collections_L] colref ON colref.CollectionID = col.CollectionID
+GROUP BY col.SiteID
 
 IF OBJECT_ID('tempdb..#coldep') IS NOT NULL DROP TABLE #coldep
 GO

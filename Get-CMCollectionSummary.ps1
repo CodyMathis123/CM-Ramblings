@@ -89,6 +89,9 @@ order by
         #region Generate dynamic parameters
         $Position = 2
         foreach ($Var in @('CollectionID', 'CollectionName', 'LimitToCollectionID', 'LimitToCollectionName')) {
+            $Set = $(@($CollectionInfo.$Var) | Where-Object { if ($null -ne $PSItem) {
+                        $PSItem.ToString().Trim() 
+                    }} | Select-Object -Unique)
             $newDynamicParamSplat = @{
                 Position         = $Position++
                 HelpMessage      = "Filter collection summary results by the $Var field"
@@ -96,9 +99,7 @@ order by
                 DPDictionary     = $Dictionary
                 Mandatory        = $true
                 Type             = [string[]]
-                ValidateSet      = $(@($CollectionInfo.$Var) | Where-Object { if ($null -ne $PSItem) {
-                            $PSItem.ToString().Trim() 
-                        }} | Select-Object -Unique)
+                ValidateSet      = $Set
                 Name             = $Var
             }
             New-DynamicParam @newDynamicParamSplat
@@ -271,104 +272,128 @@ AND col.{0} = '{1}'
                 [string]::Format("AND ({0})", ($($MWTypeFilters -join "`n").Trim().TrimStart('OR')))
             }
             'HasAppDeployment' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldeploy.CountOfAppDeployments > 0"
-                }
-                else {
-                    "AND coldeploy.CountOfAppDeployments = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldeploy.CountOfAppDeployments > 0"
+                    }
+                    $false {
+                        "AND coldeploy.CountOfAppDeployments = 0"
+                    }
                 }
             }
             'HasBaselineDeployment' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldeploy.CountOfBaselineDeployments > 0"
-                }
-                else {
-                    "AND coldeploy.CountOfBaselineDeployments = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldeploy.CountOfBaselineDeployments > 0"
+                    }
+                    $false {
+                        "AND coldeploy.CountOfBaselineDeployments = 0"
+                    }
                 }
             }
             'HasPackageDeployment' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldeploy.CountOfPackageDeployments > 0"
-                }
-                else {
-                    "AND coldeploy.CountOfPackageDeployments = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldeploy.CountOfPackageDeployments > 0"
+                    }
+                    $false {
+                        "AND coldeploy.CountOfPackageDeployments = 0"
+                    }
                 }
             }
             'HasPolicyDeployment' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldeploy.CountOfPolicyDeployments > 0"
-                }
-                else {
-                    "AND coldeploy.CountOfPolicyDeployments = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldeploy.CountOfPolicyDeployments > 0"
+                    }
+                    $false {
+                        "AND coldeploy.CountOfPolicyDeployments = 0"
+                    }
                 }
             }
             'HasTaskSequenceDeployment' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldeploy.CountOfTSDeployments > 0"
-                }
-                else {
-                    "AND coldeploy.CountOfTSDeployments = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldeploy.CountOfTSDeployments > 0"
+                    }
+                    $false {
+                        "AND coldeploy.CountOfTSDeployments = 0"
+                    }
                 }
             }
             'HasUpdateDeployment' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldeploy.CountOfUpdateDeployments > 0"
-                }
-                else {
-                    "AND coldeploy.CountOfUpdateDeployments = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldeploy.CountOfUpdateDeployments > 0"
+                    }
+                    $false {
+                        "AND coldeploy.CountOfUpdateDeployments = 0"
+                    }
                 }
             }
             'MW_Enabled' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND mw.Enabled = 1"
-                }
-                else {
-                    "AND mw.Enabled = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND mw.Enabled = 1"
+                    }
+                    $false {
+                        "AND mw.Enabled = 0"
+                    }
                 }
             }
             'HasExcludes' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldep.CountOfExcludes > 0"
-                }
-                else {
-                    "AND coldep.CountOfExcludes = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldep.CountOfExcludes > 0"
+                    }
+                    $false {
+                        "AND coldep.CountOfExcludes = 0"
+                    }
                 }
             }
             'HasIncludes' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldep.CountOfIncludes > 0"
-                }
-                else {
-                    "AND coldep.CountOfIncludes = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldep.CountOfIncludes > 0"
+                    }
+                    $false {
+                        "AND coldep.CountOfIncludes = 0"
+                    }
                 }
             }
             'UsedAsExclude' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldep.CountOfExcludedFrom > 0"
-                }
-                else {
-                    "AND coldep.CountOfExcludedFrom = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldep.CountOfExcludedFrom > 0"
+                    }
+                    $false {
+                        "AND coldep.CountOfExcludedFrom = 0"
+                    }
                 }
             }
             'UsedAsInclude' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldep.CountOfIncludedIn > 0"
-                }
-                else {
-                    "AND coldep.CountOfIncludedIn = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldep.CountOfIncludedIn > 0"
+                    }
+                    $false {
+                        "AND coldep.CountOfIncludedIn = 0"
+                    }
                 }
             }
             'UsedAsLimitingCollection' {
-                if (Get-Variable -Name $PSItem -ValueOnly) {
-                    "AND coldep.CountOfLimitedBy > 0"
-                }
-                else {
-                    "AND coldep.CountOfLimitedBy = 0"
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
+                        "AND coldep.CountOfLimitedBy > 0"
+                    }
+                    $false {
+                        "AND coldep.CountOfLimitedBy = 0"
+                    }
                 }
             }
-            default {
-                switch ($true) {
-                    $WithNoDeployments {
+            'WithNoDeployments' {
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
                         @"
                         AND CountOfAppDeployments = 0
                         AND CountOfPackageDeployments = 0
@@ -378,7 +403,11 @@ AND col.{0} = '{1}'
                         AND CountOfPolicyDeployments = 0
 "@
                     }
-                    $Unused {
+                }
+            }
+            'Unused' {
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
                         @"
                         AND CountOfAppDeployments = 0
                         AND CountOfPackageDeployments = 0
@@ -392,13 +421,17 @@ AND col.{0} = '{1}'
                         AND CountOfLimitedBy = 0
 "@
                     }
-                    $Empty {
+                }
+            }
+            'Empty' {
+                switch (Get-Variable -Name $PSItem -ValueOnly) {
+                    $true {
                         "AND col.MemberCount = 0"
                     }
-                    default {
-                        [string]::Empty
-                    }
                 }
+            }
+            default {
+                [string]::Empty
             }
         }
         if (-not [string]::IsNullOrWhiteSpace($WhereFilter)) {
@@ -537,9 +570,12 @@ AND col.{0} = '{1}'
             LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
             {0}
 "@, $WhereFilter)
+        if (-not [string]::IsNullOrWhiteSpace($WhereFilter)) {
+            Write-Verbose -Message "[WHERE Filter Generated]`n$WhereFilter"
+        }
+        else {
+            Write-Verbose -Message "No WHERE Filter Generated"
+        }
         Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $CollectionSummaryQuery
-    }
-    end {
-
     }
 }

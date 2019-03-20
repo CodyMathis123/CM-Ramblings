@@ -483,44 +483,34 @@ FROM [dbo].[v_Collections] as col
 GROUP BY col.SiteID
 
 DECLARE @ColDeployments TABLE
-        (
+(
     CollectionID varchar(8)
-            ,
+    ,
     CountOfAppDeployments int
-            ,
+    ,
     CountOfPackageDeployments int
-            ,
+    ,
     CountOfUpdateDeployments int
-            ,
+    ,
     CountOfBaselineDeployments int
-            ,
+    ,
     CountOfTSDeployments int
-        )
+    ,
+    CountOfPolicyDeployments int
+)
 INSERT INTO @ColDeployments
-    (CollectionID, CountOfAppDeployments, CountOfPackageDeployments, CountOfUpdateDeployments, CountOfBaselineDeployments, CountOfTSDeployments)
-SELECT DISTINCT col.SiteID AS CollectionID
-    , SUM(CASE WHEN FeatureType = 1 THEN 1 ELSE 0 END) AS CountOfAppDeployments
-    , SUM(CASE WHEN FeatureType = 2 THEN 1 ELSE 0 END) AS CountOfPackageDeployments
-    , SUM(CASE WHEN FeatureType = 5 THEN 1 ELSE 0 END) AS CountOfUpdateDeployments
-    , SUM(CASE WHEN FeatureType = 6 THEN 1 ELSE 0 END) AS CountOfBaselineDeployments
-    , SUM(CASE WHEN FeatureType = 7 THEN 1 ELSE 0 END) AS CountOfTSDeployments
+    (CollectionID, CountOfAppDeployments, CountOfPackageDeployments, CountOfUpdateDeployments, CountOfBaselineDeployments, CountOfTSDeployments, CountOfPolicyDeployments)
+SELECT col.SiteID AS CollectionID
+, SUM(CASE WHEN FeatureType = 1 THEN 1 ELSE 0 END) AS CountOfAppDeployments
+, SUM(CASE WHEN FeatureType = 2 THEN 1 ELSE 0 END) AS CountOfPackageDeployments
+, SUM(CASE WHEN FeatureType = 5 THEN 1 ELSE 0 END) AS CountOfUpdateDeployments
+, SUM(CASE WHEN FeatureType = 6 THEN 1 ELSE 0 END) AS CountOfBaselineDeployments
+, SUM(CASE WHEN FeatureType = 7 THEN 1 ELSE 0 END) AS CountOfTSDeployments
+, SUM(CASE WHEN deppol.CollectionID IS NOT NULL THEN 1 ELSE 0 END) OVER (PARTITION BY deppol.ClientSettingsID, deppol.CollectionID) AS CountOfPolicyDeployments
 FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[vDeploymentSummary] deployments on deployments.CollectionID = col.SiteID
-GROUP BY col.SiteID
-
-DECLARE @PolicyDeployments TABLE
-        (
-    CollectionID varchar(8)
-            ,
-    CountOfPolicyDeployments int
-        )
-INSERT INTO @PolicyDeployments
-    (CollectionID, CountOfPolicyDeployments)
-SELECT DISTINCT col.SiteID AS CollectionID
-        , SUM(CASE WHEN deppol.CollectionID IS NOT NULL THEN 1 ELSE 0 END) AS CountOfPolicyDeployments
-FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] deppol ON deppol.CollectionID = col.SiteID
-GROUP BY col.SiteID
+GROUP BY col.SiteID, deppol.ClientSettingsID, deppol.CollectionID
 
 SELECT DISTINCT col.CollectionName
     , col.SiteID AS CollectionID
@@ -548,7 +538,7 @@ SELECT DISTINCT col.CollectionName
     , coldeploy.CountOfUpdateDeployments
     , coldeploy.CountOfBaselineDeployments
     , coldeploy.CountOfTSDeployments
-    , poldep.CountOfPolicyDeployments
+    , coldeploy.CountOfPolicyDeployments
     , mw.Name AS 'MW Name'
     , mw.Description AS 'MW Description'
     , mw.Schedules AS 'MW ScheduleString'
@@ -577,7 +567,6 @@ FROM [dbo].[v_Collections] AS col
     LEFT JOIN @ColDeployments AS coldeploy ON coldeploy.CollectionID = col.SiteID
     LEFT JOIN @ColRefresh AS colrefresh ON colrefresh.CollectionID = col.SiteID
     LEFT JOIN @ColDependencies AS coldep ON coldep.CollectionID = col.SiteID
-    LEFT JOIN @PolicyDeployments AS poldep ON poldep.CollectionID = col.SiteID
     LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
     {0}
 "@, $WhereFilter)

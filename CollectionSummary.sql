@@ -119,9 +119,7 @@ SELECT DISTINCT col.CollectionName
     , col.LimitToCollectionID
     , col.LastMemberChangeTime
 FROM [dbo].[v_Collections] AS col
-    LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] clients ON clients.CollectionID = col.SiteID
-    LEFT JOIN [dbo].[vDeploymentSummary] deploys ON deploys.CollectionID = col.SiteID
+    LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
     LEFT JOIN @ColDeployments AS coldeploy ON coldeploy.CollectionID = col.SiteID
     LEFT JOIN @ColRefresh AS colrefresh ON colrefresh.CollectionID = col.SiteID
     LEFT JOIN @ColDependencies AS coldep ON coldep.CollectionID = col.SiteID
-    LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID

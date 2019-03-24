@@ -66,8 +66,9 @@ function Get-CMCollectionSummary {
         #endregion function New-DynamicParam - All credit to RamblingCookieMonster (https://github.com/RamblingCookieMonster/PowerShell/blob/master/New-DynamicParam.ps1)
         $Dictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
 
-        #region RBAC enforced query to retrieve CollectionID and CollectionName
-        $RBAC_CollectionQuery = @"
+        if ($PSBoundParameters.ContainsKey('SQLServer') -and $PSBoundParameters.ContainsKey('Database')) {
+            #region RBAC enforced query to retrieve CollectionID and CollectionName
+            $RBAC_CollectionQuery = @"
 declare @SID varbinary(39), @Token nvarchar(max), @UserID nvarchar(max)
 SET @SID = SUSER_SID()
 Set @Token = 'S-1-5-21-'
@@ -83,92 +84,93 @@ From
 order by
         cols.CollectionName
 "@
-        $CollectionInfo = Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $RBAC_CollectionQuery
-        #endregion RBAC enforced query to retrieve CollectionID and CollectionName
+            $CollectionInfo = Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $RBAC_CollectionQuery
+            #endregion RBAC enforced query to retrieve CollectionID and CollectionName
 
-        #region Generate dynamic parameters
-        $Position = 2
-        foreach ($Var in @('CollectionID', 'CollectionName', 'LimitToCollectionID', 'LimitToCollectionName')) {
-            $Set = $(@($CollectionInfo.$Var) | Where-Object { if ($null -ne $PSItem) {
-                        $PSItem.ToString().Trim() 
-                    }} | Select-Object -Unique)
-            $newDynamicParamSplat = @{
-                Position         = $Position++
-                HelpMessage      = "Filter collection summary results by the $Var field"
-                ParameterSetName = [string]::Format('FilterBy{0}', $Var)
-                DPDictionary     = $Dictionary
-                Mandatory        = $true
-                Type             = [string[]]
-                ValidateSet      = $Set
-                Name             = $Var
+            #region Generate dynamic parameters
+            $Position = 2
+            foreach ($Var in @('CollectionID', 'CollectionName', 'LimitToCollectionID', 'LimitToCollectionName')) {
+                $Set = $(@($CollectionInfo.$Var) | Where-Object { if ($null -ne $PSItem) {
+                            $PSItem.ToString().Trim()
+                        } } | Select-Object -Unique)
+                $newDynamicParamSplat = @{
+                    Position         = $Position++
+                    HelpMessage      = "Filter collection summary results by the $Var field"
+                    ParameterSetName = [string]::Format('FilterBy{0}', $Var)
+                    DPDictionary     = $Dictionary
+                    Mandatory        = $true
+                    Type             = [string[]]
+                    ValidateSet      = $Set
+                    Name             = $Var
+                }
+                New-DynamicParam @newDynamicParamSplat
             }
-            New-DynamicParam @newDynamicParamSplat
-        }
 
-        foreach ($Var in @('HasAppDeployment', 'HasBaselineDeployment'
-                , 'HasExcludes', 'HasIncludes'
-                , 'HasPackageDeployment', 'HasPolicyDeployment'
-                , 'HasTaskSequenceDeployment', 'HasUpdateDeployment'
-                , 'MW_Enabled', 'UsedAsExclude'
-                , 'UsedAsInclude', 'UsedAsLimitingCollection')) {
+            foreach ($Var in @('HasAppDeployment', 'HasBaselineDeployment'
+                    , 'HasExcludes', 'HasIncludes'
+                    , 'HasPackageDeployment', 'HasPolicyDeployment'
+                    , 'HasTaskSequenceDeployment', 'HasUpdateDeployment'
+                    , 'MW_Enabled', 'UsedAsExclude'
+                    , 'UsedAsInclude', 'UsedAsLimitingCollection')) {
+                $newDynamicParamSplat = @{
+                    Position     = $Position++
+                    HelpMessage  = "Filter collection summary results based on $Var being `$true or `$false"
+                    DPDictionary = $Dictionary
+                    Mandatory    = $false
+                    Type         = [bool]
+                    Name         = $Var
+                }
+                New-DynamicParam @newDynamicParamSplat
+            }
             $newDynamicParamSplat = @{
-                Position     = $Position++
-                HelpMessage  = "Filter collection summary results based on $Var being `$true or `$false"
                 DPDictionary = $Dictionary
-                Mandatory    = $false
-                Type         = [bool]
-                Name         = $Var
+                Position     = $Position++
+                Name         = 'WithNoDeployments'
+                Type         = [switch]
+                HelpMessage  = "Return all collections which have no deployments"
             }
             New-DynamicParam @newDynamicParamSplat
-        }
-        $newDynamicParamSplat = @{
-            DPDictionary = $Dictionary
-            Position     = $Position++
-            Name         = 'WithNoDeployments'
-            Type         = [switch]
-            HelpMessage  = "Return all collections which have no deployments"
-        }
-        New-DynamicParam @newDynamicParamSplat
-        $newDynamicParamSplat = @{
-            DPDictionary = $Dictionary
-            Position     = $Position++
-            Name         = 'Unused'
-            Type         = [switch]
-            HelpMessage  = "Return all collections which have no deployments, and are not included in, ecluded from, or limiting other collecitons"
-        }
-        New-DynamicParam @newDynamicParamSplat
-        $newDynamicParamSplat = @{
-            DPDictionary = $Dictionary
-            Position     = $Position++
-            Name         = 'Empty'
-            Type         = [switch]
-            HelpMessage  = "Returns all collections with 0 members"
-        }
-        New-DynamicParam @newDynamicParamSplat
+            $newDynamicParamSplat = @{
+                DPDictionary = $Dictionary
+                Position     = $Position++
+                Name         = 'Unused'
+                Type         = [switch]
+                HelpMessage  = "Return all collections which have no deployments, and are not included in, ecluded from, or limiting other collecitons"
+            }
+            New-DynamicParam @newDynamicParamSplat
+            $newDynamicParamSplat = @{
+                DPDictionary = $Dictionary
+                Position     = $Position++
+                Name         = 'Empty'
+                Type         = [switch]
+                HelpMessage  = "Returns all collections with 0 members"
+            }
+            New-DynamicParam @newDynamicParamSplat
 
-        $RefreshTypeValidationSet = @('Any Incremental', 'Periodic Updates Only', 'Non-Recurring Schedule'
-            , 'Non-Recurring Schedule and Incremental', 'Manual Updates Only'
-            , 'Incremental and Periodic Updates', 'Incremental Updates Only')
-        $newDynamicParamSplat = @{
-            DPDictionary = $Dictionary
-            Position     = $Position++
-            Name         = 'RefreshType'
-            Type         = [string[]]
-            ValidateSet  = $RefreshTypeValidationSet
-        }
-        New-DynamicParam @newDynamicParamSplat
+            $RefreshTypeValidationSet = @('Any Incremental', 'Periodic Updates Only', 'Non-Recurring Schedule'
+                , 'Non-Recurring Schedule and Incremental', 'Manual Updates Only'
+                , 'Incremental and Periodic Updates', 'Incremental Updates Only')
+            $newDynamicParamSplat = @{
+                DPDictionary = $Dictionary
+                Position     = $Position++
+                Name         = 'RefreshType'
+                Type         = [string[]]
+                ValidateSet  = $RefreshTypeValidationSet
+            }
+            New-DynamicParam @newDynamicParamSplat
 
-        $MWTypeValidationSet = @('General', 'Updates', 'OSD')
-        $newDynamicParamSplat = @{
-            DPDictionary = $Dictionary
-            Position     = $Position++
-            Name         = 'MWType'
-            Type         = [string[]]
-            ValidateSet  = $MWTypeValidationSet
+            $MWTypeValidationSet = @('General', 'Updates', 'OSD')
+            $newDynamicParamSplat = @{
+                DPDictionary = $Dictionary
+                Position     = $Position++
+                Name         = 'MWType'
+                Type         = [string[]]
+                ValidateSet  = $MWTypeValidationSet
+            }
+            New-DynamicParam @newDynamicParamSplat
+            #endregion Generate dynamic parameters
+            $Dictionary
         }
-        New-DynamicParam @newDynamicParamSplat
-        #endregion Generate dynamic parameters
-        $Dictionary
     }
     begin {
         #region Assign DynamicParam results to variable - All credit to RamblingCookieMonster (https://github.com/RamblingCookieMonster/PowerShell/blob/master/New-DynamicParam.ps1)
@@ -515,7 +517,7 @@ GROUP BY col.SiteID, deppol.ClientSettingsID, deppol.CollectionID
 SELECT DISTINCT col.CollectionName
     , col.SiteID AS CollectionID
     , col.MemberCount
-    , CASE 
+    , CASE
         WHEN (col.RefreshType = 1) THEN 'Manual Updates Only'
         WHEN (col.RefreshType = 2 AND RIGHT(col.Schedule,5) = '80000') THEN 'Non-Recurring Schedule'
         WHEN (col.RefreshType = 2) THEN 'Periodic Updates Only'
@@ -523,9 +525,9 @@ SELECT DISTINCT col.CollectionName
         WHEN (col.RefreshType = 6 AND RIGHT(col.Schedule,5) = '80000') THEN 'Non-Recurring Schedule and Incremental'
         WHEN (col.RefreshType = 6) THEN 'Incremental and Periodic Updates'
     END AS RefreshType
-    , col.Schedule AS 'Refresh ScheduleString' 
+    , col.Schedule AS 'Refresh ScheduleString'
     , (CAST(colrefresh.EvaluationLength AS Float)/1000.00) AS 'FullRefreshLength'
-    , CASE 
+    , CASE
         WHEN (col.RefreshType IN (4,6)) THEN (CAST(colrefresh.IncrementalEvaluationLength AS Float)/1000)
     END AS 'IncrementalRefreshLength'
     , coldep.CountOfExcludes
@@ -543,7 +545,7 @@ SELECT DISTINCT col.CollectionName
     , mw.Description AS 'MW Description'
     , mw.Schedules AS 'MW ScheduleString'
     , mw.StartTime AS 'MW StartTime'
-    , CASE 
+    , CASE
         WHEN mw.ServiceWindowType = 1	Then 'General'
         WHEN mw.ServiceWindowType = 4	Then 'Updates'
         WHEN mw.ServiceWindowType = 5	Then 'OSD'

@@ -134,7 +134,7 @@ order by
                 Position     = $Position++
                 Name         = 'Unused'
                 Type         = [switch]
-                HelpMessage  = "Return all collections which have no deployments, and are not included in, excluded from, or limiting other collecitons"
+                HelpMessage  = "Return all collections which have no deployments, and are not included in, excluded from, or limiting other collections"
             }
             New-DynamicParam @newDynamicParamSplat
             $newDynamicParamSplat = @{

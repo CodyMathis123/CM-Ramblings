@@ -95,13 +95,13 @@ order by
                         } } | Select-Object -Unique)
                 $newDynamicParamSplat = @{
                     Position         = $Position++
-                    HelpMessage      = "Filter collection summary results by the $Var field"
-                    ParameterSetName = [string]::Format('FilterBy{0}', $Var)
                     DPDictionary     = $Dictionary
+                    ParameterSetName = [string]::Format('FilterBy{0}', $Var)
                     Mandatory        = $true
+                    Name             = $Var
                     Type             = [string[]]
                     ValidateSet      = $Set
-                    Name             = $Var
+                    HelpMessage      = "Filter collection summary results by the $Var field"
                 }
                 New-DynamicParam @newDynamicParamSplat
             }
@@ -114,11 +114,10 @@ order by
                     , 'UsedAsInclude', 'UsedAsLimitingCollection')) {
                 $newDynamicParamSplat = @{
                     Position     = $Position++
-                    HelpMessage  = "Filter collection summary results based on $Var being `$true or `$false"
                     DPDictionary = $Dictionary
-                    Mandatory    = $false
-                    Type         = [bool]
                     Name         = $Var
+                    Type         = [bool]
+                    HelpMessage  = "Filter collection summary results based on $Var being `$true or `$false"
                 }
                 New-DynamicParam @newDynamicParamSplat
             }
@@ -156,6 +155,7 @@ order by
                 Name         = 'RefreshType'
                 Type         = [string[]]
                 ValidateSet  = $RefreshTypeValidationSet
+                HelpMessage  = "Return only collections which have the specified collection refresh type(s)"
             }
             New-DynamicParam @newDynamicParamSplat
 
@@ -166,6 +166,15 @@ order by
                 Name         = 'MWType'
                 Type         = [string[]]
                 ValidateSet  = $MWTypeValidationSet
+                HelpMessage  = "Return only collections which have the specified MW type(s)"
+            }
+            New-DynamicParam @newDynamicParamSplat
+
+            $newDynamicParamSplat = @{
+                DPDictionary = $Dictionary
+                Position     = $Position++
+                Name         = 'GenerateWhereFilter'
+                Type         = [switch]
             }
             New-DynamicParam @newDynamicParamSplat
             #endregion Generate dynamic parameters
@@ -457,7 +466,6 @@ SELECT col.SiteID AS CollectionID
 FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[Collections_L] colref ON colref.CollectionID = col.CollectionID
 GROUP BY col.SiteID
-
 DECLARE @ColDependencies TABLE
         (
     CollectionID varchar(8)
@@ -483,7 +491,6 @@ SELECT CAST(col.SiteID AS varchar) AS CollectionID
 FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[vSMS_CollectionDependencies] coldep ON (coldep.DependentCollectionID = col.SiteID OR coldep.SourceCollectionID = col.SiteID)
 GROUP BY col.SiteID
-
 DECLARE @ColDeployments TABLE
 (
     CollectionID varchar(8)
@@ -513,7 +520,6 @@ FROM [dbo].[v_Collections] as col
     LEFT JOIN [dbo].[vDeploymentSummary] deployments on deployments.CollectionID = col.SiteID
     LEFT JOIN [dbo].[vSMS_ClientSettingsAssignments] deppol ON deppol.CollectionID = col.SiteID
 GROUP BY col.SiteID, deppol.ClientSettingsID, deppol.CollectionID
-
 SELECT DISTINCT col.CollectionName
     , col.SiteID AS CollectionID
     , col.MemberCount
@@ -576,6 +582,11 @@ FROM [dbo].[v_Collections] AS col
         else {
             Write-Verbose -Message "No WHERE Filter Generated"
         }
-        Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $CollectionSummaryQuery
+        if (-not $GenerateWhereFilter) {
+            Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $CollectionSummaryQuery
+        }
+        else {
+            $WhereFilter
+        }
     }
 }

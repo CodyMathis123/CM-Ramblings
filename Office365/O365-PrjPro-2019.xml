@@ -1,0 +1,26 @@
+<Configuration>
+    <Info Description="Office 365 with Project Pro 2019 x86" />
+    <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" Version="16.0.10730.20334" ForceUpgrade="TRUE" AllowCdnFallback="True">
+        <Product ID="O365ProPlusRetail">
+            <Language ID="MatchOS" Fallback="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+            <Language ID="MatchPreviousMSI" />
+            <ExcludeApp ID="Groove" />
+        </Product>
+        <Product ID="ProjectPro2019Volume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+            <Language ID="MatchPreviousMSI" />
+        </Product>
+    </Add>
+    <RemoveMSI All="TRUE" />
+    <AppSettings>
+        <Setup Name="Company" Value="Contoso" />
+        <User Key="software\microsoft\office\16.0\ms project\security" Name="trustwss" Value="1" Type="REG_DWORD" App="proj16" Id="L_EnableuntrustedintranetzoneaccesstoProjectServer" />
+    </AppSettings>
+    <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+    <Display Level="Full" AcceptEULA="TRUE" />
+    <Logging Level="Standard" Path="%TEMP%" />
+</Configuration>

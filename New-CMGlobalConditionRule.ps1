@@ -1,4 +1,4 @@
-function New-CMGlobalConditionsRule {
+function New-CMGlobalConditionRule {
     [CmdletBinding(DefaultParameterSetName = "__AllParameterSets")]
     param (
         [parameter(Mandatory = $true)]

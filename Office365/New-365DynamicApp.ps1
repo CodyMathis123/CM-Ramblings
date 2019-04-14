@@ -129,14 +129,16 @@ $DeploymentTypes = foreach ($XML in $AllXML_Options) {
     }
 }
 
-# We sort the deployment types so that the priority order ensures proper installation
+# We sort the deployment types so that the priority order ensures proper installation depending on existing apps
 $DeploymentTypes = $DeploymentTypes | Sort-Object -Property NameLength, AppName -Descending
 
 #endregion generate PSCustomObject that we will loop through to create DeploymentTypes
 #endregion parse all XML and return custom object with info we need, and sort the list, also update company and bitness in XML
 
+#region application and DeploymentType creation
 try {
     Set-Location -Path $SiteCodePath
+    #region application creation
     Write-Output "Creating Application [Name=$ApplicationName]"
     $newCMApplicationSplat = @{
         ErrorAction    = 'Stop'
@@ -149,13 +151,16 @@ try {
     }
     $BaseApp = New-CMApplication @newCMApplicationSplat
     Write-Output "Successfully created Application [Name=$ApplicationName]"
+    #endregion application creation
+
+    #region DeploymentType creation
     foreach ($DT in $DeploymentTypes) {
+        Set-Location -Path $SiteCodePath
         Write-Output $('-' * 50)
         Write-Output "Creating DeploymentType [Name=$($DT.AppName)] using [Config=$($DT.Config)] with [Architecture=$($Bitness)]"
-        $DetectionClauses = [System.Collections.ArrayList]::new()
-        $Requirements = [System.Collections.ArrayList]::new()
 
-        Set-Location -Path $SiteCodePath
+        #region generate Detection Clauses for the DeploymentType
+        $DetectionClauses = [System.Collections.ArrayList]::new()
         foreach ($ProductID in $($DT.ProductIDs)) {
             $newCMDetectionClauseRegistryKeyValueSplat = @{
                 Is64Bit            = $true
@@ -215,8 +220,10 @@ try {
             InputObject              = $BaseApp
             UserInteractionMode      = 'Normal'
         }
+        #endregion generate Detection Clauses for the DeploymentType
 
         #region determine which Requirements we need to add for this deployment type based on ProductIDs
+        $Requirements = [System.Collections.ArrayList]::new()
         switch -Regex ($DT.ProductIDs) {
             'VisioPro' {
                 $null = $Requirements.Add($VisPro_Rule)
@@ -243,7 +250,7 @@ try {
             }
         }
 
-        $addCMScriptDeploymentTypeSplat.AddRequirement = $Requirements | Select-Object -Unique
+        $addCMScriptDeploymentTypeSplat.AddRequirement = $Requirements
         #endregion determine which Requirements we need to add for this deployment type based on ProductIDs
 
         try {
@@ -256,8 +263,10 @@ try {
         }
         Write-Output $('-' * 50)
     }
+    #endregion DeploymentType creation
 }
 catch {
     $_
     Write-Error -Message "Failed to create Application [Name=$ApplicationName]"
 }
+#endregion application and DeploymentType creation

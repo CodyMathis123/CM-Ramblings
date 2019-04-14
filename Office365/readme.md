@@ -17,4 +17,4 @@ $new365DynamicAppSplat = @{
 }  
 New-365DynamicApp @new365DynamicAppSplat 
 
-This will use the info and XML to generate an application with 17 deployment types for you. 
+This will use the info and XML to generate an application with 17 deployment types for you. It is every combination of O365, Visio/Project Professional/Standard 2016/2019.

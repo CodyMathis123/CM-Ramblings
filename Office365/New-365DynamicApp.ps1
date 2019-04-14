@@ -17,29 +17,29 @@ $AllXML_Options = Get-ChildItem -Path $AppRoot -Filter *.xml
 
 #region create global conditions if they don't exist and find OS GC
 #region GC Office Product function
-function New-GCOfficeProductScript {
+function Get-CMOfficeGlobalCondition {
     param (
         [parameter(Mandatory = $true)]
-        [validateset('ProjectPro', 'ProjectStandard', 'VisioPro', 'VisioStandard')]
+        [validateset('Project Professional', 'Project Standard', 'Visio Professional', 'Visio Standard')]
         [string]$Application,
         [parameter(Mandatory = $true)]
         [validateset('x86', 'x64')]
         [string]$Bitness
     )
     switch ($Application) {
-        'ProjectPro' {
+        'Project Professional' {
             $MSI_App = 'PRJPRO'
             $C2R_App = 'PROJECTPRO'
         }
-        'ProjectStandard' {
+        'Project Standard' {
             $MSI_App = 'PRJSTD'
             $C2R_App = 'PROJECTSTD'
         }
-        'VisioPro' {
+        'Visio Professional' {
             $MSI_App = 'VISPRO'
             $C2R_App = 'VISIOPRO'
         }
-        'VisioStandard' {
+        'Visio Standard' {
             $MSI_App = 'VISSTD'
             $C2R_App = 'VISIOSTD'
         }
@@ -53,7 +53,9 @@ function New-GCOfficeProductScript {
         }
     }
 
-    @"
+    $GC_Name = [string]::Format('Condition Detection - Microsoft {0} {1}', $Application, $Bitness)
+
+    $GC_Script = @"
     `$MSI_App = '$MSI_App'
     `$C2R_App = '$C2R_App'
     `$RegMSIUninstall = Get-ChildItem -Path $GC_RegPath
@@ -67,35 +69,22 @@ function New-GCOfficeProductScript {
         `$false
     }
 "@
+
+    if (-not ($GC = Get-CMGlobalCondition -Name $GC_Name)) {
+        Write-Warning "Global condition not found: Creating GC '$GC_Name'"
+        $GC = New-CMGlobalConditionScript -DataType Boolean -ScriptText $GC_Script -ScriptLanguage PowerShell -Name $GC_Name
+    }
+
+    return $GC
+
 }
 #endregion GC Office Product function
 
-$PrjProScript = New-GCOfficeProductScript -Application ProjectPro -Bitness $Bitness
-$PrjStdScript = New-GCOfficeProductScript -Application ProjectStandard -Bitness $Bitness
-$VisProScript = New-GCOfficeProductScript -Application VisioPro -Bitness $Bitness
-$VisStdScript = New-GCOfficeProductScript -Application VisioStandard -Bitness $Bitness
-
 Set-Location -Path $SiteCodePath
-$PrjProGC_Name = "Condition Detection - Microsoft Project Pro $Bitness"
-if (-not ($ProjPro_GC = Get-CMGlobalCondition -Name $PrjProGC_Name)) {
-    Write-Warning "Global condition not found: Creating GC '$PrjProGC_Name'"
-    $ProjPro_GC = New-CMGlobalConditionScript -DataType Boolean -ScriptText $PrjProScript -ScriptLanguage PowerShell -Name $PrjProGC_Name
-}
-$PrjStdGC_Name = "Condition Detection - Microsoft Project Standard $Bitness"
-if (-not ($ProjStandard_GC = Get-CMGlobalCondition -Name $PrjStdGC_Name)) {
-    Write-Warning "Global condition not found: Creating GC '$PrjStdGC_Name'"
-    $ProjStandard_GC = New-CMGlobalConditionScript -DataType Boolean -ScriptText $PrjStdScript -ScriptLanguage PowerShell -Name $PrjStdGC_Name
-}
-$VisProGC_Name = "Condition Detection - Microsoft Visio Pro $Bitness"
-if (-not ($VisPro_GC = Get-CMGlobalCondition -Name $VisProGC_Name)) {
-    Write-Warning "Global condition not found: Creating GC '$VisProGC_Name'"
-    $VisPro_GC = New-CMGlobalConditionScript -DataType Boolean -ScriptText $VisProScript -ScriptLanguage PowerShell -Name $VisProGC_Name
-}
-$VisStdGC_Name = "Condition Detection - Microsoft Visio Standard $Bitness"
-if (-not ($VisStandard_GC = Get-CMGlobalCondition -Name $VisStdGC_Name)) {
-    Write-Warning "Global condition not found: Creating GC '$VisStdGC_Name'"
-    $VisStandard_GC = New-CMGlobalConditionScript -DataType Boolean -ScriptText $VisStdScript -ScriptLanguage PowerShell -Name $VisStdGC_Name
-}
+$VisStandard_GC = Get-CMOfficeGlobalCondition -Application 'Visio Standard' -Bitness $Bitness
+$VisPro_GC = Get-CMOfficeGlobalCondition -Application 'Visio Professional' -Bitness $Bitness
+$ProjPro_GC = Get-CMOfficeGlobalCondition -Application 'Project Professional' -Bitness $Bitness
+$ProjStandard_GC = Get-CMOfficeGlobalCondition -Application 'Project Standard' -Bitness $Bitness
 $OS_GC = Get-CMGlobalCondition -Name 'Operating System' | Where-Object { $_.ModelName -eq 'GLOBAL/OperatingSystem' }
 #endregion create global conditions if they don't exist and find OS GC
 

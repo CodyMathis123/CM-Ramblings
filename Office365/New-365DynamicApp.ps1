@@ -472,7 +472,7 @@ function New-CMGlobalConditionsRule {
 }
 #endregion functions
 
-$SiteCodePath = "$(((Get-WmiObject -namespace "root\sms" -class "__Namespace" -ComputerName $PrimarySiteServer).Name).substring(8 - 3)):"
+$SiteCodePath = "$(((Get-WmiObject -namespace "root\sms" -class "__Namespace" -ComputerName $SMSProvider).Name).substring(8 - 3)):"
 Set-Location -Path C:
 $AllXML_Options = Get-ChildItem -Path $AppRoot -Filter *.xml
 

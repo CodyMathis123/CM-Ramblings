@@ -1,4 +1,5 @@
 End Product - One application with 17 deployment types that will dynamically install the 'new' version of Office / Project / Visio as needed. 
+
 <a href="https://imgur.com/IyY6hGS"><img src="https://i.imgur.com/IyY6hGS.png" title="source: imgur.com" /></a>  
 
 You can place all the XML, and Office 365 c2r setup.exe in a directory. 

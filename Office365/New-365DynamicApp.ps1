@@ -108,15 +108,17 @@ $XML_Bitness = switch ($Bitness) {
         '64'
     }
 }
-#region generate variable for XML friendly bitness
+#endregion generate variable for XML friendly bitness
 
 #region generate PSCustomObject that we will loop through to create DeploymentTypes
 $DeploymentTypes = foreach ($XML in $AllXML_Options) {
     $Config = $XML.Name
-    $ConfigXML = [xml]$(Get-Content -Path $XML.FullName)
+    $ConfigXML = [xml]::new()
+    $ConfigXML.PreserveWhitespace = $true
+    $ConfigXML.Load($XML.FullName)
     $ConfigXML.Configuration.AppSettings.Setup.Value = $Company
     $ConfigXML.Configuration.Add.OfficeClientEdition = $XML_Bitness
-    Set-Content -Path $XML.FullName -Value $ConfigXml.OuterXml -Force
+    $ConfigXML.Save($XML.FullName)
     $AppName = $ConfigXML.Configuration.Info.Description
     $ProductIDs = $ConfigXML.Configuration.Add.Product.ID
 
@@ -139,6 +141,7 @@ $DeploymentTypes = $DeploymentTypes | Sort-Object -Property NameLength, AppName 
 try {
     Set-Location -Path $SiteCodePath
     #region application creation
+    Write-Output $('-' * 50)
     Write-Output "Creating Application [Name=$ApplicationName]"
     $newCMApplicationSplat = @{
         ErrorAction    = 'Stop'

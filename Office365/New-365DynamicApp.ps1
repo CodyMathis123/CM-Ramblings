@@ -2,11 +2,11 @@
 .SYNOPSIS
     Generate an Office 365 application for use in Configuration Manager that has a deployment type per app combination
 .DESCRIPTION
-    This script will take your desired input parameters to generate an application with various deployment types. 
+    This script will take your desired input parameters to generate an application with various deployment types.
     The use case is an upgrade from an older version of Microsoft Office to Office 365. The correct combination of
-    applications will be selected and installed based on Global Conditions assinged as requirements for the various 
+    applications will be selected and installed based on Global Conditions assinged as requirements for the various
     deployment types. You also can select your desired Update Channe, Bitness, license type, Company Name, as well as
-    other options. 
+    other options.
 .PARAMETER SMSProvider
     Provides the name for the SMSProvider for the environment you want to create the application in.
 .PARAMETER ApplicationName
@@ -19,49 +19,47 @@
 .PARAMETER Bitness
     Provides the desired architecture for the deployment types. All of the XML will be updated with this value.
     'x86', 'x64'
-.PARAMETER VisioLicense
+.PARAMETER VisioProjectLicense
     Allows you to select the license type which you are licensed for. This will be either 'Online' or 'Volume'
-    Note that if 'Volume' is selected, you will see that Visio 2016 deployment types are created, and have requirements
-    for Windows 7 or 8/8.1 attached to them. Visio 2019 deployment types are targeted at Windows 10.
-.PARAMETER ProjectLicense
-    Allows you to select the license type which you are licensed for. This will be either 'Online' or 'Volume'
-    Note that if 'Volume' is selected, you will see that Project 2016 deployment types are created, and have requirements
-    for Windows 7 or 8/8.1 attached to them. Project 2019 deployment types are targeted at Windows 10.
+    Note that if 'Volume' is selected, you will see that Visio and Project 2016 as well as 2019 deployment types are created, and have requirements
+    for Windows 7 or 8/8.1 attached to them. Visio and Project 2019 deployment types are targeted at Windows 10.
 .PARAMETER UpdateChannel
-    Provides the desired Update Channel for the deployment types. All of the XML will be updated with this value. 
+    Provides the desired Update Channel for the deployment types. All of the XML will be updated with this value.
     'Semi-Annual', 'Semi-AnnualTargeted', 'Monthly', 'MonthlyTargeted'
 .PARAMETER Version
     Provides the desired Version for the Office 365 installation. All of the XML will be updated with this value.
-    By default, we attempt to gather the latest deployed patch version based on the Update Channel selected. 
+    By default, we attempt to gather the latest deployed patch version based on the Update Channel selected.
 .EXAMPLE
     C:\PS> $new365DynamicApp = @{
-        SMSProvider     = 'SCCM'
-        AppRoot         = '\\sccm\sources\O365-Dynamic'
-        ApplicationName = 'Office 365 - Dynamic'
-        VisioLicense    = 'Volume'
-        ProjectLicense  = 'Volume'
-        Company         = 'Contoso'
-        Bitness         = 'x64'
-        UpdateChannel   = 'Semi-Annual'
+        SMSProvider         = 'SCCM'
+        AppRoot             = '\\sccm\sources\O365-Dynamic'
+        ApplicationName     = 'Office 365 - Dynamic'
+        VisioProjectLicense = 'Volume'
+        Company             = 'Contoso'
+        Bitness             = 'x64'
+        UpdateChannel       = 'Semi-Annual'
     }
     New-365DynamicApp.ps1 @new365DynamicApp
 .EXAMPLE
     C:\PS> $new365DynamicApp = @{
-        SMSProvider     = 'SCCM'
-        AppRoot         = '\\sccm\sources\O365-Dynamic'
-        ApplicationName = 'Office 365 - Dynamic'
-        VisioLicense    = 'Online'
-        ProjectLicense  = 'Online'
-        Company         = 'Contoso'
-        Bitness         = 'x64'
-        UpdateChannel   = 'Monthly'
+        SMSProvider         = 'SCCM'
+        AppRoot             = '\\sccm\sources\O365-Dynamic'
+        ApplicationName     = 'Office 365 - Dynamic'
+        VisioProjectLicense = 'Online'
+        Company             = 'Contoso'
+        Bitness             = 'x64'
+        UpdateChannel       = 'Monthly'
     }
     New-365DynamicApp.ps1 @new365DynamicApp
 .NOTES
-    This will create an application with quite a few deployment types. These deployment types all revolve around the global conditions 
-    that get created. It is always a smart idea to test something such as this in your environment before a large scale rollout. 
+    It is a good idea to run 'setup.exe /download O365.xml' once. The good news is, every single application combination uses the exact
+    same Office 365 binaries. These XML by default do have AllowCdnFallback="True" set, so they will download directly from Microsoft
+    if deployed with no binaries, or ones which do not represent the XML.
+
+    This will create an application with quite a few deployment types. These deployment types all revolve around the global conditions
+    that get created. It is always a smart idea to test something such as this in your environment before a large scale rollout.
     It has been working great for us, but no two environments are the same. You will need to manipulate the XML files to add
-    languages or customs settings if you need those. 
+    languages or customs settings if you need those.
 #>
 [CmdletBinding()]
 param(
@@ -78,10 +76,7 @@ param(
     [string]$Bitness,
     [parameter(Mandatory = $true)]
     [validateset('Online', 'Volume')]
-    [string]$VisioLicense,
-    [parameter(Mandatory = $true)]
-    [validateset('Online', 'Volume')]
-    [string]$ProjectLicense,
+    [string]$VisioProjectLicense,
     [parameter(Mandatory = $false)]
     [validateset('Semi-Annual', 'Semi-AnnualTargeted', 'Monthly', 'MonthlyTargeted')]
     [string]$UpdateChannel = 'Semi-Annual',
@@ -92,7 +87,21 @@ $SiteCode = $(((Get-WmiObject -namespace "root\sms" -class "__Namespace" -Comput
 Write-Verbose "Determined SiteCode to be $SiteCode based on an SMS Provider of $SMSProvider"
 $SiteCodePath = "$SiteCode`:"
 Set-Location -Path C:
+
+#region Gather all the relevant XML files and filter based on the license type
 $AllXML_Options = Get-ChildItem -Path $AppRoot -Filter *.xml
+switch ($VisioProjectLicense) {
+    'Online' {
+        $AllXML_Options = $AllXML_Options | Where-Object { $_.Name -match 'O365.xml|Online.xml' }
+    }
+    'Volume' {
+        $AllXML_Options = $AllXML_Options | Where-Object { $_.Name -notmatch 'Online.xml' }
+    }
+}
+foreach ($File in $AllXML_Options) {
+    Write-Verbose "$($File.Name) selected based on [VisioProjectLicense=$VisioProjectLicense]"
+}
+#endregion Gather all the relevant XML files and filter based on the license type
 
 #region create global conditions if they don't exist and find OS GC
 #region GC Office Product function
@@ -100,12 +109,11 @@ function Get-CMOfficeGlobalCondition {
     [CmdletBinding()]
     param (
         [parameter(Mandatory = $true)]
-        [validateset('Project Professional', 'Project Standard', 'Visio Professional', 'Visio Standard')]
-        [string]$Application,
-        [parameter(Mandatory = $true)]
-        [validateset('x86', 'x64')]
-        [string]$Bitness
+        [validateset('Project Professional', 'Project Standard', 'Project', 'Visio Professional', 'Visio Standard', 'Visio')]
+        [string]$Application
     )
+    $GC_Name = [string]::Format('Condition Detection - Microsoft {0}', $Application)
+
     switch ($Application) {
         'Project Professional' {
             $MSI_App = 'PRJPRO'
@@ -115,6 +123,20 @@ function Get-CMOfficeGlobalCondition {
             $MSI_App = 'PRJSTD'
             $C2R_App = 'PROJECTSTD'
         }
+        'Project' {
+            if (-not ($GC = Get-CMGlobalCondition -Name $GC_Name)) {
+                Write-Warning "Global condition not found: Creating GC '$GC_Name'"
+                $ruleProjPro = Get-CMOfficeGlobalCondition -Application 'Project Professional' | New-CMRequirementRuleBooleanValue -Value $true
+                $ruleProjStd = Get-CMOfficeGlobalCondition -Application 'Project Standard' | New-CMRequirementRuleBooleanValue -Value $true
+                $expressionProject = New-CMRequirementRuleExpression -AddRequirementRule $ruleProjPro, $ruleProjStd -ClauseOperator Or
+                $GC = New-CMGlobalConditionExpression -Name $GC_Name -DeviceType Windows -RootExpression $expressionProject
+            }
+            else {
+                Write-Verbose "Using existing Global Condition with name $($GC.LocalizedDisplayName)"
+            }
+
+            return $GC
+        }
         'Visio Professional' {
             $MSI_App = 'VISPRO'
             $C2R_App = 'VISIOPRO'
@@ -123,26 +145,32 @@ function Get-CMOfficeGlobalCondition {
             $MSI_App = 'VISSTD'
             $C2R_App = 'VISIOSTD'
         }
-    }
-    $GC_RegPath = switch ($Bitness) {
-        'x86' {
-            'REGISTRY::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\'
-        }
-        'x64' {
-            'REGISTRY::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'
-        }
-    }
+        'Visio' {
+            if (-not ($GC = Get-CMGlobalCondition -Name $GC_Name)) {
+                Write-Warning "Global condition not found: Creating GC '$GC_Name'"
+                $ruleVisPro = Get-CMOfficeGlobalCondition -Application 'Visio Professional' | New-CMRequirementRuleBooleanValue -Value $true
+                $ruleVisStd = Get-CMOfficeGlobalCondition -Application 'Visio Standard' | New-CMRequirementRuleBooleanValue -Value $true
+                $expressionVisio = New-CMRequirementRuleExpression -AddRequirementRule $ruleVisPro, $ruleVisStd -ClauseOperator Or
+                $GC = New-CMGlobalConditionExpression -Name $GC_Name -DeviceType Windows -RootExpression $expressionVisio
+            }
+            else {
+                Write-Verbose "Using existing Global Condition with name $($GC.LocalizedDisplayName)"
+            }
 
-    $GC_Name = [string]::Format('Condition Detection - Microsoft {0} {1}', $Application, $Bitness)
+            return $GC
+        }
+    }
 
     $GC_Script = @"
     `$MSI_App = '$MSI_App'
     `$C2R_App = '$C2R_App'
-    `$RegMSIUninstall = Get-ChildItem -Path $GC_RegPath
+    `$RegMSIx86Uninstall = Get-ChildItem -Path 'REGISTRY::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\'
+    `$RegMSIx64Uninstall = Get-ChildItem -Path 'REGISTRY::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'
     `$RegC2R = Get-ItemProperty -Path REGISTRY::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Office\ClickToRun\Configuration
-    `$MSI = `$RegMSIUninstall | Where-Object { `$_.PSChildName -match "^OFFICE[0-9]{2}\.`$MSI_App`$" }
+    `$MSIx86 = `$RegMSIx86Uninstall | Where-Object { `$_.PSChildName -match "^OFFICE[0-9]{2}\.`$MSI_App`$" }
+    `$MSIx64 = `$RegMSIx64Uninstall | Where-Object { `$_.PSChildName -match "^OFFICE[0-9]{2}\.`$MSI_App`$" }
     `$C2R = `$RegC2R | Where-Object { `$_.ProductReleaseIDs -match `$C2R_App -and `$_.Platform -eq '$Bitness' }
-    if (`$MSI -or `$C2R) {
+    if (`$MSIx86 -or `$MSIx64 -or `$C2R) {
         `$true
     }
     else {
@@ -164,10 +192,12 @@ function Get-CMOfficeGlobalCondition {
 
 Set-Location -Path $SiteCodePath
 Write-Verbose "Identifying and creating global conditions as needed for detection of Visio / Project Pro / Standard"
-$VisStandard_GC = Get-CMOfficeGlobalCondition -Application 'Visio Standard' -Bitness $Bitness
-$VisPro_GC = Get-CMOfficeGlobalCondition -Application 'Visio Professional' -Bitness $Bitness
-$ProjPro_GC = Get-CMOfficeGlobalCondition -Application 'Project Professional' -Bitness $Bitness
-$ProjStandard_GC = Get-CMOfficeGlobalCondition -Application 'Project Standard' -Bitness $Bitness
+$VisStandard_GC = Get-CMOfficeGlobalCondition -Application 'Visio Standard'
+$VisPro_GC = Get-CMOfficeGlobalCondition -Application 'Visio Professional'
+$Vis_GC = Get-CMOfficeGlobalCondition -Application Visio
+$ProjPro_GC = Get-CMOfficeGlobalCondition -Application 'Project Professional'
+$ProjStandard_GC = Get-CMOfficeGlobalCondition -Application 'Project Standard'
+$Proj_GC = Get-CMOfficeGlobalCondition -Application Project
 $OS_GC = Get-CMGlobalCondition -Name 'Operating System' | Where-Object { $_.ModelName -eq 'GLOBAL/OperatingSystem' }
 #endregion create global conditions if they don't exist and find OS GC
 
@@ -177,8 +207,10 @@ $2016_Rule = $OS_GC | New-CMRequirementRuleOperatingSystemValue -PlatformString 
 $2019_Rule = $OS_GC | New-CMRequirementRuleOperatingSystemValue -PlatformString Windows/All_x64_Windows_10_and_higher_Clients -RuleOperator OneOf
 $VisStandard_Rule = $VisStandard_GC | New-CMRequirementRuleBooleanValue -Value $true
 $VisPro_Rule = $VisPro_GC | New-CMRequirementRuleBooleanValue -Value $true
+$Vis_Rule = $Vis_GC | New-CMRequirementRuleBooleanValue -Value $true
 $ProjStandard_Rule = $ProjStandard_GC | New-CMRequirementRuleBooleanValue -Value $true
 $ProjPro_Rule = $ProjPro_GC | New-CMRequirementRuleBooleanValue -Value $true
+$Proj_Rule = $Proj_GC | New-CMRequirementRuleBooleanValue -Value $true
 #endregion create our requirements for use in the DeploymentTypes
 
 #region parse all XML and return custom object with info we need, and sort the list, also update company and bitness in XML
@@ -233,7 +265,7 @@ if (-not $PSBoundParameters.ContainsKey('Version')) {
         Write-Verbose "Identified O365 [Version=$FullBuildNumber] as the latest deployed version for [Channel=$Channel] - This value will be used to update all XML"
     }
     else {
-        Write-Error -Message "Failed to identify Office 365 version based on the input." -ErrorAction Stop
+        Write-Error -Message "Failed to identify Office 365 version based on the input. This likely means you are not deploying updates for the specified architecture and update channel." -ErrorAction Stop
     }
 }
 else {
@@ -257,7 +289,7 @@ $DeploymentTypes = foreach ($XML in $AllXML_Options) {
     $AppName = $ConfigXML.Configuration.Info.Description
     $ProductIDs = $ConfigXML.Configuration.Add.Product.ID
     #endregion Load XML and manipulate based on input parameters, and gather information
-    
+
     [PSCustomObject]@{
         Config     = $Config
         AppName    = $AppName
@@ -364,17 +396,23 @@ try {
         #region determine which Requirements we need to add for this deployment type based on ProductIDs
         $Requirements = [System.Collections.ArrayList]::new()
         switch -Regex ($DT.ProductIDs) {
-            'VisioPro' {
+            '^VisioPro[X|2019]Volume$' {
                 $null = $Requirements.Add($VisPro_Rule)
             }
-            'VisioStd' {
+            '^VisioStd[X|2019]Volume$' {
                 $null = $Requirements.Add($VisStandard_Rule)
             }
-            'ProjectPro' {
+            '^VisioProRetail$' {
+                $null = $Requirements.Add($Vis_Rule)
+            }
+            '^ProjectPro[X|2019]Volume$' {
                 $null = $Requirements.Add($ProjPro_Rule)
             }
-            'ProjectStd' {
+            '^ProjectStd[X|2019]Volume$' {
                 $null = $Requirements.Add($ProjStandard_Rule)
+            }
+            '^ProjectProRetail$' {
+                $null = $Requirements.Add($Proj_Rule)
             }
         }
 
@@ -403,6 +441,19 @@ try {
         Write-Output $('-' * 50)
     }
     #endregion DeploymentType creation
+
+    #region cleanup revision from creating deployment types
+    Write-Output $('-' * 50)
+    Write-Output "Removing revision history caused by app generation"
+    try {
+        Get-CMApplicationRevisionHistory -Name $ApplicationName | Where-Object { -not $_.IstLatest } | Remove-CMApplicationRevisionHistory -Force -ErrorAction Stop
+        Write-Output "All unneeded application revisions removed"
+    }
+    catch {
+        Write-Warning "Application revision history cleanup failed. Consider manual cleanup."
+    }
+    Write-Output $('-' * 50)
+    #endregion cleanup revision from creating deployment types
 }
 catch {
     $_

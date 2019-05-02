@@ -1,5 +1,5 @@
 <Configuration>
-    <Info Description="Office 365 with Visio Standard and Project Pro 2016" />
+    <Info Description="Office 365 with Project Online" />
     <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" Version="16.0.10730.20334" ForceUpgrade="TRUE" AllowCdnFallback="True">
         <Product ID="O365ProPlusRetail">
             <Language ID="MatchOS" Fallback="en-us" />
@@ -8,13 +8,7 @@
             <Language ID="MatchPreviousMSI" />
             <ExcludeApp ID="Groove" />
         </Product>
-        <Product ID="VisioStdXVolume">
-            <Language ID="en-us" />
-            <Language ID="es-es" />
-            <Language ID="pt-br" />
-            <Language ID="MatchPreviousMSI" />
-        </Product>
-        <Product ID="ProjectProXVolume">
+        <Product ID="ProjectProRetail">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />
@@ -23,7 +17,9 @@
     </Add>
     <RemoveMSI All="TRUE" />
     <Remove All="FALSE">
-        <Product ID="VisioProXVolume" />
+        <Product ID="ProjectStd2019Volume" />
+        <Product ID="ProjectPro2019Volume" />
+        <Product ID="ProjectProXVolume" />
         <Product ID="ProjectStdXVolume" />
     </Remove>
     <AppSettings>

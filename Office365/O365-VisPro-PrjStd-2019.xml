@@ -1,5 +1,5 @@
 <Configuration>
-    <Info Description="Office 365 with Visio Pro and Project Standard 2019 x86" />
+    <Info Description="Office 365 with Visio Pro and Project Standard 2019" />
     <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" Version="16.0.10730.20334" ForceUpgrade="TRUE" AllowCdnFallback="True">
         <Product ID="O365ProPlusRetail">
             <Language ID="MatchOS" Fallback="en-us" />
@@ -22,9 +22,16 @@
         </Product>
     </Add>
     <RemoveMSI All="TRUE" />
+    <Remove All="FALSE">
+        <Product ID="VisioProXVolume" />
+        <Product ID="VisioStd2019Volume" />
+        <Product ID="VisioStdXVolume" />
+        <Product ID="ProjectPro2019Volume" />
+        <Product ID="ProjectProXVolume" />
+        <Product ID="ProjectStdXVolume" />
+    </Remove>
     <AppSettings>
         <Setup Name="Company" Value="Contoso" />
-        <User Key="software\microsoft\office\16.0\ms project\security" Name="trustwss" Value="1" Type="REG_DWORD" App="proj16" Id="L_EnableuntrustedintranetzoneaccesstoProjectServer" />
     </AppSettings>
     <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
     <Display Level="Full" AcceptEULA="TRUE" />

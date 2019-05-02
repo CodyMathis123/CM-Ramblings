@@ -1,5 +1,5 @@
 <Configuration>
-    <Info Description="Office 365 with Visio Pro 2016 x86" />
+    <Info Description="Office 365 with Visio Pro 2016" />
     <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" Version="16.0.10730.20334" ForceUpgrade="TRUE" AllowCdnFallback="True">
         <Product ID="O365ProPlusRetail">
             <Language ID="MatchOS" Fallback="en-us" />
@@ -16,6 +16,9 @@
         </Product>
     </Add>
     <RemoveMSI All="TRUE" />
+    <Remove All="FALSE">
+        <Product ID="VisioStdXVolume" />
+    </Remove>
     <AppSettings>
         <Setup Name="Company" Value="Contoso" />
     </AppSettings>

@@ -1,0 +1,41 @@
+<Configuration>
+    <Info Description="Office 365 with Project Online and Visio Pro 2019" />
+    <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" Version="16.0.10730.20334" ForceUpgrade="TRUE" AllowCdnFallback="True">
+        <Product ID="O365ProPlusRetail">
+            <Language ID="MatchOS" Fallback="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+            <Language ID="MatchPreviousMSI" />
+            <ExcludeApp ID="Groove" />
+        </Product>
+        <Product ID="ProjectProRetail">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+            <Language ID="MatchPreviousMSI" />
+        </Product>
+        <Product ID="VisioPro2019Volume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+            <Language ID="MatchPreviousMSI" />
+        </Product>
+    </Add>
+    <RemoveMSI All="TRUE" />
+    <Remove All="FALSE">
+        <Product ID="ProjectStd2019Volume" />
+        <Product ID="ProjectPro2019Volume" />
+        <Product ID="ProjectProXVolume" />
+        <Product ID="ProjectStdXVolume" />
+        <Product ID="VisioProXVolume" />
+        <Product ID="VisioStd2019Volume" />
+        <Product ID="VisioStdXVolume" />
+        <Product ID="VisioProRetail" />
+    </Remove>
+    <AppSettings>
+        <Setup Name="Company" Value="Contoso" />
+    </AppSettings>
+    <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+    <Display Level="Full" AcceptEULA="TRUE" />
+    <Logging Level="Standard" Path="%TEMP%" />
+</Configuration>

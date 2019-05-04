@@ -48,7 +48,17 @@ The script has 11 parameters that you can see below in the help info from the sc
 .PARAMETER DisplayLevel<br>
 &nbsp;&nbsp;&nbsp;&nbsp;Provides the desired display level for the Office 365 installer. This can be either 'Full' or 'None. All of the XML will be updated with this value. <br>
 
-
-<script src="https://gist.github.com/CodyMathis123/b718ffa0bf856991dc796015d3fc1743.js"></script>
+$appName = 'Office 365 - Visio Volume and Project Volume'<br>
+$New365DynamicAppSplat = @{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;AppRoot = '\\contoso.com\DFS\CM\Applications\Office365\O365-DynamicInstall'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ProjectLicense = 'Volume'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ApplicationName = $AppName<br>
+&nbsp;&nbsp;&nbsp;&nbsp;SMSProvider = 'SCCM'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;VisioLicense = 'Volume'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Company = 'Contoso'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Bitness = 'x64'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;UpdateChannel = 'Semi-Annual'<br>
+}<br>
+.\New-365DynamicApp.ps1 @New365DynamicAppSplat<br>
 
 This will use the info and XML to generate an application with 17 deployment types for you. It is every combination of O365, Visio/Project Professional/Standard 2016/2019 volume licensed. 

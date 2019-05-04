@@ -1,10 +1,10 @@
 End Product - One application with all possible deployment types that will dynamically install the 'new' version of Office / Project / Visio as needed based on your licensing selection. 
 
 
-<a href="https://imgur.com/0Cq1SQd"><img src="https://i.imgur.com/0Cq1SQd.png" title="source: imgur.com" /></a>
-<a href="https://imgur.com/uSCBK6n"><img src="https://i.imgur.com/uSCBK6n.png" title="source: imgur.com" /></a>
-<a href="https://imgur.com/5wa7VN9"><img src="https://i.imgur.com/5wa7VN9.png" title="source: imgur.com" /></a>
-<a href="https://imgur.com/0SSlGi6"><img src="https://i.imgur.com/0SSlGi6.png" title="source: imgur.com" /></a>
+<a href="https://imgur.com/0Cq1SQd"><img src="https://i.imgur.com/0Cq1SQd.png?1" title="source: imgur.com" /></a>
+<a href="https://imgur.com/uSCBK6n"><img src="https://i.imgur.com/uSCBK6n.png?1" title="source: imgur.com" /></a>
+<a href="https://imgur.com/5wa7VN9"><img src="https://i.imgur.com/5wa7VN9.png?1" title="source: imgur.com" /></a>
+<a href="https://imgur.com/0SSlGi6"><img src="https://i.imgur.com/0SSlGi6.png?1" title="source: imgur.com" /></a>
 
 You can place all the XML, and Office 365 c2r setup.exe in a directory. 
 

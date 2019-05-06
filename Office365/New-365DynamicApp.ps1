@@ -120,7 +120,6 @@ param(
     [parameter(Mandatory = $false)]
     [string]$Version,
     [parameter(Mandatory = $false)]
-    [string]$AllowCdnFallback = 'True',
     [bool]$AllowCdnFallback = $true,
     [parameter(Mandatory = $false)]
     [validateset('Full', 'None')]

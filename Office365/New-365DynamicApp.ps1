@@ -75,7 +75,7 @@
         Company             = 'Contoso'
         Bitness             = 'x64'
         UpdateChannel       = 'Monthly'
-        AllowCdnFallback    = $true
+        AllowCdnFallback    = 'true'
         DisplayLevel        = 'Full'
     }
     New-365DynamicApp.ps1 @new365DynamicApp
@@ -120,7 +120,8 @@ param(
     [parameter(Mandatory = $false)]
     [string]$Version,
     [parameter(Mandatory = $false)]
-    [bool]$AllowCdnFallback = $true,
+    [validateset('True', 'False')]
+    [string]$AllowCdnFallback = 'True',
     [parameter(Mandatory = $false)]
     [validateset('Full', 'None')]
     [string]$DisplayLevel = 'Full'
@@ -459,22 +460,22 @@ try {
         #region determine which Requirements we need to add for this deployment type based on ProductIDs
         $Requirements = [System.Collections.ArrayList]::new()
         switch -Regex ($DT.ProductIDs) {
-            '^VisioPro[X|2019]Volume$' {
+            'VisioPro(X|2019)Volume' {
                 $null = $Requirements.Add($VisPro_Rule)
             }
-            '^VisioStd[X|2019]Volume$' {
+            'VisioStd(X|2019)Volume' {
                 $null = $Requirements.Add($VisStandard_Rule)
             }
-            '^VisioProRetail$' {
+            'VisioProRetail' {
                 $null = $Requirements.Add($Vis_Rule)
             }
-            '^ProjectPro[X|2019]Volume$' {
+            'ProjectPro(X|2019)Volume' {
                 $null = $Requirements.Add($ProjPro_Rule)
             }
-            '^ProjectStd[X|2019]Volume$' {
+            'ProjectStd(X|2019)Volume' {
                 $null = $Requirements.Add($ProjStandard_Rule)
             }
-            '^ProjectProRetail$' {
+            'ProjectProRetail' {
                 $null = $Requirements.Add($Proj_Rule)
             }
         }

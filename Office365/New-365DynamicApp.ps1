@@ -346,7 +346,7 @@ $DeploymentTypes = foreach ($XML in $FilteredXML_Configs) {
     $ConfigXML.Configuration.Add.OfficeClientEdition = $XML_Bitness
     $ConfigXML.Configuration.Add.Version = $FullBuildNumber
     $ConfigXML.Configuration.Add.Channel = $XML_Channel
-    $ConfigXml.Configuration.Add.AllowCdnFallback = $($AllowCdnFallback | Out-String)
+    $ConfigXml.Configuration.Add.AllowCdnFallback = "$($AllowCdnFallback | Out-String)"
     $ConfigXml.Configuration.Display.Level = $DisplayLevel
     $ConfigXML.Save($XML.FullName)
     $AppName = $ConfigXML.Configuration.Info.Description

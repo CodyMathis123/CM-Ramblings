@@ -120,8 +120,8 @@ param(
     [parameter(Mandatory = $false)]
     [string]$Version,
     [parameter(Mandatory = $false)]
-    [validateset('True', 'False')]
     [string]$AllowCdnFallback = 'True',
+    [bool]$AllowCdnFallback = $true,
     [parameter(Mandatory = $false)]
     [validateset('Full', 'None')]
     [string]$DisplayLevel = 'Full'
@@ -347,7 +347,7 @@ $DeploymentTypes = foreach ($XML in $FilteredXML_Configs) {
     $ConfigXML.Configuration.Add.OfficeClientEdition = $XML_Bitness
     $ConfigXML.Configuration.Add.Version = $FullBuildNumber
     $ConfigXML.Configuration.Add.Channel = $XML_Channel
-    $ConfigXml.Configuration.Add.AllowCdnFallback = $AllowCdnFallback
+    $ConfigXml.Configuration.Add.AllowCdnFallback = $($AllowCdnFallback | Out-String)
     $ConfigXml.Configuration.Display.Level = $DisplayLevel
     $ConfigXML.Save($XML.FullName)
     $AppName = $ConfigXML.Configuration.Info.Description
@@ -460,22 +460,22 @@ try {
         #region determine which Requirements we need to add for this deployment type based on ProductIDs
         $Requirements = [System.Collections.ArrayList]::new()
         switch -Regex ($DT.ProductIDs) {
-            'VisioPro(X|2019)Volume' {
+            '^VisioPro(X|2019)Volume$' {
                 $null = $Requirements.Add($VisPro_Rule)
             }
-            'VisioStd(X|2019)Volume' {
+            '^VisioStd(X|2019)Volume$' {
                 $null = $Requirements.Add($VisStandard_Rule)
             }
-            'VisioProRetail' {
+            '^VisioProRetail$' {
                 $null = $Requirements.Add($Vis_Rule)
             }
-            'ProjectPro(X|2019)Volume' {
+            '^ProjectPro(X|2019)Volume$' {
                 $null = $Requirements.Add($ProjPro_Rule)
             }
-            'ProjectStd(X|2019)Volume' {
+            '^ProjectStd(X|2019)Volume$' {
                 $null = $Requirements.Add($ProjStandard_Rule)
             }
-            'ProjectProRetail' {
+            '^ProjectProRetail$' {
                 $null = $Requirements.Add($Proj_Rule)
             }
         }

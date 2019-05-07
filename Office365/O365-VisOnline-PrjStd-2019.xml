@@ -8,7 +8,7 @@
             <Language ID="MatchPreviousMSI" />
             <ExcludeApp ID="Groove" />
         </Product>
-        <Product ID="ProjectProRetail">
+        <Product ID="VisioProRetail">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />
@@ -27,10 +27,10 @@
         <Product ID="VisioProXVolume" />
         <Product ID="VisioStd2019Volume" />
         <Product ID="VisioStdXVolume" />
-        <Product ID="VisioProRetail" />
         <Product ID="ProjectPro2019Volume" />
         <Product ID="ProjectProXVolume" />
         <Product ID="ProjectStdXVolume" />
+        <Product ID="ProjectProRetail" />
     </Remove>
     <AppSettings>
         <Setup Name="Company" Value="Contoso" />

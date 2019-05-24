@@ -15,7 +15,7 @@ $TaskXML = @"
   xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Date>2019-05-22T23:53:35.7629665</Date>
-    <Author>MASON_NTD\sa869791</Author>
+    <Author>SCCM</Author>
     <URI>\$TaskName</URI>
   </RegistrationInfo>
   <Triggers>

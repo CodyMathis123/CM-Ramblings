@@ -1,45 +1,97 @@
 function New-LoopAction {
     <#
-	.SYNOPSIS
-		This function allows you to create a looping script with an exit condition
-	#>
+    .SYNOPSIS
+        Function to loop a specified scriptblock until certain conditions are met
+    .DESCRIPTION
+        This function is a wrapper for a ForLoop or a DoUntil loop. This allows you to specify if you want to exit based on a timeout, or a number of iterations.
+            Additionally, you can specify an optional delay between loops, and the type of dealy (Minutes, Seconds). If needed, you can also perform an action based on
+            whether the 'Exit Condition' was met or not. This is the IfTimeoutScript and IfSucceedScript. 
+    .PARAMETER LoopTimeout
+        A time interval integer which the loop should timeout after. This is for a DoUntil loop.
+    .PARAMETER LoopTimeoutType
+         Provides the time increment type for the LoopTimeout, defaulting to Seconds. ('Seconds', 'Minutes', 'Hours', 'Days')
+    .PARAMETER LoopDelay
+        An optional delay that will occur between each loop.
+    .PARAMETER LoopDelayType
+        Provides the time increment type for the LoopDelay between loops, defaulting to Seconds. ('Milliseconds', 'Seconds', 'Minutes')
+    .PARAMETER Iterations
+        Implies that a ForLoop is wanted. This will provide the maximum number of Iterations for the loop. [i.e. "for ($i = 0; $i -lt $Iterations; $i++)..."]
+    .PARAMETER ScriptBlock
+        A script block that will run inside the loop. Recommend encapsulating inside { } or providing a [scriptblock]
+    .PARAMETER ExitCondition
+        A script block that will act as the exit condition for the do-until loop. Will be evaluated each loop. Recommend encapsulating inside { } or providing a [scriptblock]
+    .PARAMETER IfTimeoutScript
+        A script block that will act as the script to run if the timeout occurs. Recommend encapsulating inside { } or providing a [scriptblock]
+    .PARAMETER IfSucceedScript
+        A script block that will act as the script to run if the exit condition is met. Recommend encapsulating inside { } or providing a [scriptblock]
+    .EXAMPLE
+        C:\PS> $newLoopActionSplat = @{
+                    LoopTimeoutType = 'Seconds'
+                    ScriptBlock = { 'Bacon' }
+                    ExitCondition = { 'Bacon' -Eq 'eggs' }
+                    IfTimeoutScript = { 'Breakfast'}
+                    LoopDelayType = 'Seconds'
+                    LoopDelay = 1
+                    LoopTimeout = 10
+                }
+                New-LoopAction @newLoopActionSplat
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Bacon
+                Breakfast
+    .EXAMPLE
+        C:\PS> $newLoopActionSplat = @{
+                    ScriptBlock = { if($Test -eq $null){$Test = 0};$TEST++ }
+                    ExitCondition = { $Test -eq 4 }
+                    IfTimeoutScript = { 'Breakfast' }
+                    IfSucceedScript = { 'Dinner'}
+                    Iterations  = 5
+                    LoopDelay = 1
+                }
+                New-LoopAction @newLoopActionSplat
+                Dinner
+        C:\PS> $newLoopActionSplat = @{
+                    ScriptBlock = { if($Test -eq $null){$Test = 0};$TEST++ }
+                    ExitCondition = { $Test -eq 6 }
+                    IfTimeoutScript = { 'Breakfast' }
+                    IfSucceedScript = { 'Dinner'}
+                    Iterations  = 5
+                    LoopDelay = 1
+                }
+                New-LoopAction @newLoopActionSplat
+                Breakfast
+.NOTES
+        Play with the conditions a bit. I've tried to provide some examples that demonstrate how the loops, timeouts, and scripts work!
+#>
     param
     (
-        # Provides the integer value that is part of the exit condition of the loop
         [parameter(Mandatory = $true, ParameterSetName = 'DoUntil')]
         [int32]$LoopTimeout,
-        # Provides the time increment type for the loop timeout that is part of the exit condition of the loop
-
         [parameter(Mandatory = $true, ParameterSetName = 'DoUntil')]
         [ValidateSet('Seconds', 'Minutes', 'Hours', 'Days')]
         [string]$LoopTimeoutType,
-        # Provides the integer delay in seconds between loops ($LoopDelayType defaults to seconds)
-
-        [parameter(Mandatory = $true, ParameterSetName = 'DoUntil')]
+        [parameter(Mandatory = $true)]
         [int32]$LoopDelay,
-        # Provides the time increment type for the LoopDelay between loops (defaults to seconds)
-
         [parameter(Mandatory = $false, ParameterSetName = 'DoUntil')]
-        [ValidateSet('Milliseconds', 'Seconds')]
+        [ValidateSet('Milliseconds', 'Seconds', 'Minutes')]
         [string]$LoopDelayType = 'Seconds',
-        # A script block that will run inside the do-until loop recommend, encapsulating inside { }
-
         [parameter(Mandatory = $true, ParameterSetName = 'ForLoop')]
         [int32]$Iterations,
-        # Provides the number of iterations to perform the loop for
-
         [parameter(Mandatory = $true)]
         [scriptblock]$ScriptBlock,
-        # A script block that will act as the exit condition for the do-until loop, recommend encapsulating inside { }
-
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $true, ParameterSetName = 'DoUntil')]
+        [parameter(Mandatory = $false, ParameterSetName = 'ForLoop')]
         [scriptblock]$ExitCondition,
-        # A script block that will act as the script to run if the timeout occurs, recommend encapsulating inside { }
-
         [parameter(Mandatory = $false)]
         [scriptblock]$IfTimeoutScript,
-        # A script block that will act as the script to run if the condition succeeds, recommend encapsulating inside { }
-
         [parameter(Mandatory = $false)]
         [scriptblock]$IfSucceedScript
     )
@@ -76,9 +128,22 @@ function New-LoopAction {
             }
             'ForLoop' {
                 for ($i = 0; $i -lt $Iterations; $i++) {
+                    switch ($FirstRunDone) {
+                        $false {
+                            $FirstRunDone = $true
+                        }
+                        Default {
+                            $paramStartSleep = @{
+                                $LoopDelayType = $LoopDelay
+                            }
+                            Start-Sleep @paramStartSleep
+                        }
+                    }
                     . $ScriptBlock
-                    if (. $ExitCondition) {
-                        break
+                    if ($PSBoundParameters.ContainsKey('ExitCondition')) {
+                        if (. $ExitCondition) {
+                            break
+                        }
                     }
                 }
             }
@@ -96,11 +161,21 @@ function New-LoopAction {
                 $StopWatch.Reset()
             }
             'ForLoop' {
-                if ((-not (. $ExitCondition)) -and $i -ge $Iterations -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
-                    . $IfTimeoutScript
+                if ($PSBoundParameters.ContainsKey('ExitCondition')) {
+                    if ((-not (. $ExitCondition)) -and $i -ge $Iterations -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
+                        . $IfTimeoutScript
+                    }
+                    elseif ((. $ExitCondition) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
+                        . $IfSucceedScript
+                    }
                 }
-                elseif ((. $ExitCondition) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
-                    . $IfSucceedScript
+                else {
+                    if ($i -ge $Iterations -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
+                        . $IfTimeoutScript
+                    }
+                    elseif ($i -lt $Iterations -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
+                        . $IfSucceedScript
+                    }
                 }
             }
         }

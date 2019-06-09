@@ -42,7 +42,7 @@ function Set-CMDistributionPointMaintenanceMode {
             $DP = Get-CimInstance @getCimInstanceSplat
             if ($null -eq $DP) {
                 $Filter = [string]::Format("Name LIKE '{0}%'", $Computer)
-                Write-Warning "Falling back to a wildcard filter [Filter `"$Filter`"]"
+                Write-Warning "Falling back to a wildcard filter [Filter = `"$Filter`"]"
                 $getCimInstanceSplat['Filter'] = $Filter
                 $DP = Get-WmiObject @getCimInstanceSplat
                 if ($null -eq $DP) {
@@ -52,7 +52,7 @@ function Set-CMDistributionPointMaintenanceMode {
             Write-Verbose "Identified Distribution point with [NALPath=$($DP.NALPath)]"
         }
         catch {
-            Write-Error "Failed to query for a distribution point with [Filter `"$Filter`"] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
+            Write-Error "Failed to query for a distribution point with [Filter = `"$Filter`"] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
         }
 
         $Mode = switch ($MaintenanceMode) {

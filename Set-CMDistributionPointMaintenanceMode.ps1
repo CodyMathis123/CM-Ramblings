@@ -22,71 +22,84 @@ function Set-CMDistributionPointMaintenanceMode {
         [parameter(Mandatory = $true)]
         [string]$SMSProvider,
         [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [Alias('ComputerName', 'Name')]
+        [Alias('ComputerName', 'Name', 'NetworkOSPath')]
         [string]$DistributionPoint,
         [parameter(Mandatory = $true)]
         [ValidateSet('On', 'Off')]
         [string]$MaintenanceMode
     )
-    $SiteCode = $(((Get-CimInstance -Namespace "root\sms" -ClassName "__Namespace" -ComputerName $SMSProvider).Name).substring(8 - 3))
-    $Namespace = [string]::Format('root\sms\site_{0}', $SiteCode)
-    foreach ($Computer in $DistributionPoint) {
-        try {
-            $Filter = [string]::Format("Name = '{0}'", $Computer)
-            $getCimInstanceSplat = @{
-                Filter       = $Filter
-                ComputerName = $SMSProvider
-                Namespace    = $Namespace
-                ClassName    = 'SMS_DistributionPointInfo'
-            }
-            $DP = Get-CimInstance @getCimInstanceSplat
-            if ($null -eq $DP) {
-                $Filter = [string]::Format("Name LIKE '{0}%'", $Computer)
-                Write-Warning "Falling back to a wildcard filter [Filter = `"$Filter`"]"
-                $getCimInstanceSplat['Filter'] = $Filter
-                $DP = Get-WmiObject @getCimInstanceSplat
+    begin {
+        $SiteCode = $(((Get-CimInstance -Namespace "root\sms" -ClassName "__Namespace" -ComputerName $SMSProvider).Name).substring(8 - 3))
+        $Namespace = [string]::Format('root\sms\site_{0}', $SiteCode)
+    }
+    process {
+        foreach ($Computer in $DistributionPoint) {
+            try {
+                #We remove \ if we find them, such as when NetworkOSPath is pipe from Get-CMDistributionPoint
+                $Computer = $Computer -replace "\\"
+
+                #region Query SMS Provider for DP instance
+                $Filter = [string]::Format("Name = '{0}'", $Computer)
+                $getCimInstanceSplat = @{
+                    Filter       = $Filter
+                    ComputerName = $SMSProvider
+                    Namespace    = $Namespace
+                    ClassName    = 'SMS_DistributionPointInfo'
+                }
+                $DP = Get-CimInstance @getCimInstanceSplat
                 if ($null -eq $DP) {
-                    Write-Error "WMI query for a distribution point succeded, but no object was returned. [Filter = `"$Filter`"] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
+                    $Filter = [string]::Format("Name LIKE '{0}%'", $Computer)
+                    Write-Warning "Falling back to a wildcard filter [Filter = `"$Filter`"]"
+                    $getCimInstanceSplat['Filter'] = $Filter
+                    $DP = Get-WmiObject @getCimInstanceSplat
+                    if ($null -eq $DP) {
+                        Write-Error "WMI query for a distribution point succeded, but no object was returned. [Filter = `"$Filter`"] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
+                    }
                 }
+                Write-Verbose "Identified Distribution point with [NALPath=$($DP.NALPath)]"
+                #endregion Query SMS Provider for DP instance
             }
-            Write-Verbose "Identified Distribution point with [NALPath=$($DP.NALPath)]"
-        }
-        catch {
-            Write-Error "Failed to query for a distribution point with [Filter = `"$Filter`"] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
-        }
+            catch {
+                Write-Error "Failed to query for a distribution point with [Filter = `"$Filter`"] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
+            }
 
-        $Mode = switch ($MaintenanceMode) {
-            'On' {
-                1
+            #region convert from On or Off to a simple binary number to pass to the method
+            $Mode = switch ($MaintenanceMode) {
+                'On' {
+                    1
+                }
+                'Off' {
+                    0
+                }
             }
-            'Off' {
-                0
-            }
-        }
+            #endregion convert from On or Off to a simple binary number to pass to the method
 
-        try {
-            $invokeCimMethodSplat = @{
-                ClassName    = 'SMS_DistributionPointInfo'
-                ComputerName = $SMSProvider
-                Namespace    = $Namespace
-                MethodName   = 'SetDPMaintenanceMode'
-                Arguments    = @{
-                    NALPath = $DP.NALPath
-                    Mode    = [uint32]$Mode
+            try {
+                #region Invoke maintenance mode according to input parameters, note that Mode is cast as [uint32]
+                $invokeCimMethodSplat = @{
+                    ClassName    = 'SMS_DistributionPointInfo'
+                    ComputerName = $SMSProvider
+                    Namespace    = $Namespace
+                    MethodName   = 'SetDPMaintenanceMode'
+                    Arguments    = @{
+                        NALPath = $DP.NALPath
+                        Mode    = [uint32]$Mode
+                    }
                 }
+                if ($PSCmdlet.ShouldProcess($Computer, "MaintenanceMode $MaintenanceMode")) {
+                    $Return = Invoke-CimMethod @invokeCimMethodSplat
+                    if ($Return.ReturnValue -ne 0) {
+                        Write-Error "Failed to set [DistributionPoint=$Computer] [MaintenanceMode=$MaintenanceMode] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
+                    }
+                    elseif ($Return.ReturnValue -eq 0) {
+                        Write-Verbose "Set [DistributionPoint=$Computer] [MaintenanceMode=$MaintenanceMode]"
+                    }
+                }
+                #endregion Invoke maintenance mode according to input parameters, note that Mode is cast as [uint32]
             }
-            if ($PSCmdlet.ShouldProcess($Computer, "MaintenanceMode $MaintenanceMode")) {
-                $Return = Invoke-CimMethod @invokeCimMethodSplat
-                if ($Return.ReturnValue -ne 0) {
-                    Write-Error "Failed to set [DistributionPoint=$Computer] [MaintenanceMode=$MaintenanceMode] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
-                }
-                elseif ($Return.ReturnValue -eq 0) {
-                    Write-Verbose "Set [DistributionPoint=$Computer] [MaintenanceMode=$MaintenanceMode]"
-                }
+            catch {
+                Write-Error "Failed to invoke maintenance mode change for [DistributionPoint=$Computer] [MaintenanceMode=$MaintenanceMode] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
             }
-        }
-        catch {
-            Write-Error "Failed to invoke maintenance mode change for [DistributionPoint=$Computer] [MaintenanceMode=$MaintenanceMode] against [SMSProvider=$SMSProvider]" -ErrorAction Stop
         }
     }
 }

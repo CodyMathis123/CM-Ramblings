@@ -3,17 +3,25 @@
     Allows you to toggle maintenance mode on a distribution point
 .DESCRIPTION
     This function allows you to select a distribution point and set whether the 'Maintenance Mode' feature introduced in ConfigMgr 1902
-        is toggled on or off.
+    is toggled on or off.
 .PARAMETER SMSProvider
     Define the SMS Provider which the WMI queries will execute against.
 .PARAMETER DistributionPoint
     Provides the Distribution Point which you want to change the maintenance mode of. This should be provided as a FQDN,
-        but if you provide the shortname we will also attempt a search with a wildcard.
+    but if you provide the shortname we will also attempt a search with a wildcard.
 .PARAMETER MaintenanceMode
     The desired state of of Maintenance Mode for the distribution point. This is either 'On' or 'Off'
+.PARAMETER Force
+    Bypass confirmation prompts.
 .EXAMPLE
     C:\PS> Set-CMDistributionPointMaintenanceMode -SMSProvider SCCM.CONTOSO.COM -DistributionPoint DP.CONTOSO.COM -MaintenanceMode On
 .NOTES
+    FileName:    Set-CMDistributionPointMaintenanceMode.ps1
+    Author:      Cody Mathis
+    Contact:     @CodyMathis123
+    Created:     2019-06-11
+    Updated:     2019-06-11
+
     The account you run this as must have the proper permissions to perform the maintenance mode action
 #>
 function Set-CMDistributionPointMaintenanceMode {

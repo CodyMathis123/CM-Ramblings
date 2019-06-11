@@ -17,7 +17,7 @@
     The account you run this as must have the proper permissions to perform the maintenance mode action
 #>
 function Set-CMDistributionPointMaintenanceMode {
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [parameter(Mandatory = $true)]
         [string]$SMSProvider,

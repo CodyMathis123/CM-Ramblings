@@ -26,11 +26,15 @@ function Set-CMDistributionPointMaintenanceMode {
         [string]$DistributionPoint,
         [parameter(Mandatory = $true)]
         [ValidateSet('On', 'Off')]
-        [string]$MaintenanceMode
+        [string]$MaintenanceMode,
+        [parameter(Mandatory = $false)]
+        [switch]$Force
     )
     begin {
         $SiteCode = $(((Get-CimInstance -Namespace "root\sms" -ClassName "__Namespace" -ComputerName $SMSProvider).Name).substring(8 - 3))
         $Namespace = [string]::Format('root\sms\site_{0}', $SiteCode)
+        $null = $PSBoundParameters.Remove('Force')          
+        $PSBoundParameters.Confirm = $false       
     }
     process {
         foreach ($Computer in $DistributionPoint) {
@@ -86,7 +90,7 @@ function Set-CMDistributionPointMaintenanceMode {
                         Mode    = [uint32]$Mode
                     }
                 }
-                if ($PSCmdlet.ShouldProcess($Computer, "MaintenanceMode $MaintenanceMode")) {
+                if ($Force -or $PSCmdlet.ShouldProcess($Computer, "MaintenanceMode $MaintenanceMode")) {
                     $Return = Invoke-CimMethod @invokeCimMethodSplat
                     if ($Return.ReturnValue -ne 0) {
                         Write-Error "Failed to set [DistributionPoint=$Computer] [MaintenanceMode=$MaintenanceMode] against [SMSProvider=$SMSProvider]" -ErrorAction Stop

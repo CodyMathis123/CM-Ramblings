@@ -1,152 +1,153 @@
-﻿param
-(
-    [parameter(Mandatory = $false)]
-    [string]$ComputerName,
-    # Provides the computer name to create a summary patch table for
+﻿function Send-PatchingNotification {
+    param
+    (
+        [parameter(Mandatory = $false)]
+        [string]$ComputerName,
+        # Provides the computer name to create a summary patch table for
 
-    [parameter(Mandatory = $true)]
-    [string]$DryRun,
-    # skips patching check so that we can perform a dry run of the drain an resume
+        [parameter(Mandatory = $true)]
+        [string]$DryRun,
+        # skips patching check so that we can perform a dry run of the drain an resume
 
-    [parameter(Mandatory = $true)]
-    [string]$Grouping,
-    # Provides the computer group name to create a summary patch table for
+        [parameter(Mandatory = $true)]
+        [string]$Grouping,
+        # Provides the computer group name to create a summary patch table for
 
-    [parameter(Mandatory = $true)]
-    [int32]$RBInstance,
-    # RBInstance which represents the Runbook Process ID for this runbook workflow
+        [parameter(Mandatory = $true)]
+        [int32]$RBInstance,
+        # RBInstance which represents the Runbook Process ID for this runbook workflow
 
-    [Parameter(ParameterSetName = 'SuccessNotification',
-        Mandatory = $true)]
-    [switch]$Success,
-    # Switch that indicates we are sending 'success' emails
+        [Parameter(ParameterSetName = 'SuccessNotification',
+            Mandatory = $true)]
+        [switch]$Success,
+        # Switch that indicates we are sending 'success' emails
 
-    [Parameter(ParameterSetName = 'SuccessNotification',
-        Mandatory = $true)]
-    [ValidateSet('START', 'END')]
-    [string]$Process,
-    # Provides location in the process we are at, either the start or the end
+        [Parameter(ParameterSetName = 'SuccessNotification',
+            Mandatory = $true)]
+        [ValidateSet('START', 'END')]
+        [string]$Process,
+        # Provides location in the process we are at, either the start or the end
 
-    [Parameter(ParameterSetName = 'SuccessNotification',
-        Mandatory = $true)]
-    [ValidateSet('Server', 'Grouping', 'Service')]
-    [string[]]$NotifyPer,
-    # Provides the verbosity of the success emails, whether each server creates a notification, just the grouping, or Service level info. Accepts multiple
+        [Parameter(ParameterSetName = 'SuccessNotification',
+            Mandatory = $true)]
+        [ValidateSet('Server', 'Grouping', 'Service')]
+        [string[]]$NotifyPer,
+        # Provides the verbosity of the success emails, whether each server creates a notification, just the grouping, or Service level info. Accepts multiple
 
-    [Parameter(ParameterSetName = 'TimeoutNotification',
-        Mandatory = $true)]
-    [switch]$TimeOut,
-    # Switch that indicates we are sending 'timeout' emails
+        [Parameter(ParameterSetName = 'TimeoutNotification',
+            Mandatory = $true)]
+        [switch]$TimeOut,
+        # Switch that indicates we are sending 'timeout' emails
 
-    [Parameter(ParameterSetName = 'TimeoutNotification',
-        Mandatory = $true)]
-    [ValidateSet('Drain', 'Resume')]
-    [string]$During,
-    # Provide the process which the timeout occurred during
+        [Parameter(ParameterSetName = 'TimeoutNotification',
+            Mandatory = $true)]
+        [ValidateSet('Drain', 'Resume')]
+        [string]$During,
+        # Provide the process which the timeout occurred during
 
-    [Parameter(ParameterSetName = 'FailureNotification',
-        Mandatory = $true)]
-    [switch]$Failure,
-    # Switch that indicates we are sending 'failure' emails
+        [Parameter(ParameterSetName = 'FailureNotification',
+            Mandatory = $true)]
+        [switch]$Failure,
+        # Switch that indicates we are sending 'failure' emails
 
-    [Parameter(ParameterSetName = 'FailureNotification',
-        Mandatory = $true)]
-    [ValidateSet('Server', 'Service', 'SQL-HA')]
-    [string[]]$FailureType,
-    # Provides the type of failure we are notifying about, either 'services' not starting, some sort of error at a per 'server' level, or SQL-HA failure. Accepts multiple
+        [Parameter(ParameterSetName = 'FailureNotification',
+            Mandatory = $true)]
+        [ValidateSet('Server', 'Service', 'SQL-HA')]
+        [string[]]$FailureType,
+        # Provides the type of failure we are notifying about, either 'services' not starting, some sort of error at a per 'server' level, or SQL-HA failure. Accepts multiple
 
-    [parameter(Mandatory = $true)]
-    [string]$SMTPServer,
-    # Provides the SMTP server to relay emails through
+        [parameter(Mandatory = $true)]
+        [string]$SMTPServer,
+        # Provides the SMTP server to relay emails through
 
-    [parameter(Mandatory = $true)]
-    [string]$FromAddress,
-    # Provides address to send email from
+        [parameter(Mandatory = $true)]
+        [string]$FromAddress,
+        # Provides address to send email from
 
-    [parameter(Mandatory = $true)]
-    [string]$SQLServer,
-    # Database server for staging information during the patching process
+        [parameter(Mandatory = $true)]
+        [string]$SQLServer,
+        # Database server for staging information during the patching process
 
-    [parameter(Mandatory = $true)]
-    [string]$OrchStagingDB,
-    # Database for staging information during the patching process
+        [parameter(Mandatory = $true)]
+        [string]$OrchStagingDB,
+        # Database for staging information during the patching process
 
-    [parameter(Mandatory = $true)]
-    [string]$LogLocation
-    # UNC path to store log files in
-)
+        [parameter(Mandatory = $true)]
+        [string]$LogLocation
+        # UNC path to store log files in
+    )
 
-#region import modules
-Import-Module -Name ComplexPatching
-#endregion import modules
+    #region import modules
+    Import-Module -Name ComplexPatching
+    #endregion import modules
 
-#-----------------------------------------------------------------------
+    #-----------------------------------------------------------------------
 
-## Initialize result and trace variables
-# $ResultStatus provides basic success/failed indicator
-# $ErrorMessage captures any error text generated by script
-# $Trace is used to record a running log of actions
-$ResultStatus = ""
-$ErrorMessage = ""
-$AttachLogs = $false
-$ScriptName = $((Split-Path $PSCommandPath -Leaf) -Replace '.ps1', $null)
+    ## Initialize result and trace variables
+    # $ResultStatus provides basic success/failed indicator
+    # $ErrorMessage captures any error text generated by script
+    # $Trace is used to record a running log of actions
+    $ResultStatus = ""
+    $ErrorMessage = ""
+    $AttachLogs = $false
+    $ScriptName = $((Split-Path $PSCommandPath -Leaf) -Replace '.ps1', $null)
 
-#region set our defaults for the our functions
-#region Write-CMLogEntry defaults
-$Bias = Get-WmiObject -Class Win32_TimeZone | Select-Object -ExpandProperty Bias
-if ($PSBoundParameters.ContainsKey('ComputerName')) {
-    $LogName = $ComputerName
-}
-else {
-    $LogName = $Grouping
-}
-$PSDefaultParameterValues.Add("Write-CMLogEntry:Bias", $Bias)
-$PSDefaultParameterValues.Add("Write-CMLogEntry:FileName", [string]::Format("{0}-{1}.log", $RBInstance, $LogName))
-$PSDefaultParameterValues.Add("Write-CMLogEntry:Folder", $LogLocation)
-$PSDefaultParameterValues.Add("Write-CMLogEntry:Component", "[$LogName]::[$ScriptName]")
-#endregion Write-CMLogEntry defaults
+    #region set our defaults for the our functions
+    #region Write-CMLogEntry defaults
+    $Bias = Get-WmiObject -Class Win32_TimeZone | Select-Object -ExpandProperty Bias
+    if ($PSBoundParameters.ContainsKey('ComputerName')) {
+        $LogName = $ComputerName
+    }
+    else {
+        $LogName = $Grouping
+    }
+    $PSDefaultParameterValues.Add("Write-CMLogEntry:Bias", $Bias)
+    $PSDefaultParameterValues.Add("Write-CMLogEntry:FileName", [string]::Format("{0}-{1}.log", $RBInstance, $LogName))
+    $PSDefaultParameterValues.Add("Write-CMLogEntry:Folder", $LogLocation)
+    $PSDefaultParameterValues.Add("Write-CMLogEntry:Component", "[$LogName]::[$ScriptName]")
+    #endregion Write-CMLogEntry defaults
 
-#region Start-CompPatchQuery defaults
-$PSDefaultParameterValues.Add("Start-CompPatchQuery:SQLServer", $SQLServer)
-$PSDefaultParameterValues.Add("Start-CompPatchQuery:Database", $OrchStagingDB)
-#endregion Start-CompPatchQuery defaults
-#endregion set our defaults for our functions
+    #region Start-CompPatchQuery defaults
+    $PSDefaultParameterValues.Add("Start-CompPatchQuery:SQLServer", $SQLServer)
+    $PSDefaultParameterValues.Add("Start-CompPatchQuery:Database", $OrchStagingDB)
+    #endregion Start-CompPatchQuery defaults
+    #endregion set our defaults for our functions
 
-Write-CMLogEntry "Runbook activity script started - [Running On = $env:ComputerName]"
+    Write-CMLogEntry "Runbook activity script started - [Running On = $env:ComputerName]"
 
-try {
-    $FQDN = Get-FQDNFromDB -ComputerName $ComputerName -SQLServer $SQLServer -Database $OrchStagingDB
+    try {
+        $FQDN = Get-FQDNFromDB -ComputerName $ComputerName -SQLServer $SQLServer -Database $OrchStagingDB
 
-    #region css for the tables that we convertto-html
-    $CSS = @"
+        #region css for the tables that we convertto-html
+        $CSS = @"
 <style>
 TABLE {border-width: 1px; border-style: solid; border-color: black; border-collapse: collapse;}
 TH {font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;background-color:#9b9b9b;color:#000000;vertical-align:top}
 TD {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;vertical-align:top}
 </style>
 "@
-    #endregion css for the tables that we convertto-html
+        #endregion css for the tables that we convertto-html
 
-    $Body = [system.Collections.ArrayList]::new()
-    $RecipientQuery = [system.Collections.ArrayList]::new()
+        $Body = [system.Collections.ArrayList]::new()
+        $RecipientQuery = [system.Collections.ArrayList]::new()
 
-    switch ($PSCmdlet.ParameterSetName) {
-        'FailureNotification' {
-            $AttachLogs = $true
+        switch ($PSCmdlet.ParameterSetName) {
+            'FailureNotification' {
+                $AttachLogs = $true
 
-            if ($PSBoundParameters.ContainsKey('Grouping')) {
-                $Ref1 = [string]::Format("Grouping: {0}", $Grouping)
-            }
-            if ($PSBoundParameters.ContainsKey('ComputerName')) {
-                $Ref2 = [string]::Format(" ComputerName: {0}", $ComputerName)
-            }
-            $Subject = [string]::Format("Failure during Complex Patching {0}{1}", $Ref1, $Ref2)
+                if ($PSBoundParameters.ContainsKey('Grouping')) {
+                    $Ref1 = [string]::Format("Grouping: {0}", $Grouping)
+                }
+                if ($PSBoundParameters.ContainsKey('ComputerName')) {
+                    $Ref2 = [string]::Format(" ComputerName: {0}", $ComputerName)
+                }
+                $Subject = [string]::Format("Failure during Complex Patching {0}{1}", $Ref1, $Ref2)
         
-            switch ($FailureType) {
-                'Server' {
-                    Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] because of a patching failure for [ComputerName=$ComputerName]"
-                    #region Get status of all updates logged to SQL DB'
-                    $Query = [string]::Format("
+                switch ($FailureType) {
+                    'Server' {
+                        Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] because of a patching failure for [ComputerName=$ComputerName]"
+                        #region Get status of all updates logged to SQL DB'
+                        $Query = [string]::Format("
     SELECT Distinct ServerStatus.ServerName,
 							 ServerStatus.Status,
                              ServerStatus.Grouping,
@@ -164,25 +165,25 @@ TD {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:s
     WHERE Grouping='{0}'
     ORDER BY Tier", $Grouping)
 
-                    $UpdatesInDB = Start-CompPatchQuery -Query $Query
-                    $PreContent = [string]::Format("<H4>A failure has occurred while patching computer {0} and all log files from the computers in the same grouping are attached</H4>", $ComputerName)
-                    $null = $Body.Add($($UpdatesInDB | Select-Object -Property ServerName, Status, Grouping, LastStatus, PatchStrategy, Role, ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -Head $CSS | Out-String))
-                    #endregion Get status of all updates logged to SQL DB
+                        $UpdatesInDB = Start-CompPatchQuery -Query $Query
+                        $PreContent = [string]::Format("<H4>A failure has occurred while patching computer {0} and all log files from the computers in the same grouping are attached</H4>", $ComputerName)
+                        $null = $Body.Add($($UpdatesInDB | Select-Object -Property ServerName, Status, Grouping, LastStatus, PatchStrategy, Role, ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -Head $CSS | Out-String))
+                        #endregion Get status of all updates logged to SQL DB
 
-                    #region create recipient query
-                    $null = $RecipientQuery.Add($([string]::Format("Select NotificationEmail FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [FailureNotification] = 1", $Grouping)))
-                    #endregion create recipient query
-                }
-                'SQL-HA' {
-                    #region Get status for SQL-HA failure notification
-                    Write-CMLogEntry "Getting all server info in the DB for SQL-HA [Grouping=$Grouping] because of a patching failure for [ComputerName=$ComputerName]"
-                    $HASQLInfoQuery = [string]::Format("SELECT * FROM [dbo].[ServerStatus] WHERE PatchStrategy = 'SQL-HA' AND Grouping = '{0}'", $Grouping)
-                    $HASQLInfo = Start-CompPatchQuery -Query $HASQLInfoQuery
-                    Write-CMLogEntry "Querying any server that is NOT the server we are patching from each availability group to get group info"
+                        #region create recipient query
+                        $null = $RecipientQuery.Add($([string]::Format("Select NotificationEmail FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [FailureNotification] = 1", $Grouping)))
+                        #endregion create recipient query
+                    }
+                    'SQL-HA' {
+                        #region Get status for SQL-HA failure notification
+                        Write-CMLogEntry "Getting all server info in the DB for SQL-HA [Grouping=$Grouping] because of a patching failure for [ComputerName=$ComputerName]"
+                        $HASQLInfoQuery = [string]::Format("SELECT * FROM [dbo].[ServerStatus] WHERE PatchStrategy = 'SQL-HA' AND Grouping = '{0}'", $Grouping)
+                        $HASQLInfo = Start-CompPatchQuery -Query $HASQLInfoQuery
+                        Write-CMLogEntry "Querying any server that is NOT the server we are patching from each availability group to get group info"
                     
-                    $ServerToQuery = Get-Random -InputObject ($HASQLInfo.where{ $_.ServerName -ne $ComputerName}).ServerName
-                    try {
-                        $CurrentHAInfo = Invoke-SQLcmd2 -ServerInstance $ServerToQuery -Query @"
+                        $ServerToQuery = Get-Random -InputObject ($HASQLInfo.where{ $_.ServerName -ne $ComputerName }).ServerName
+                        try {
+                            $CurrentHAInfo = Invoke-SQLcmd2 -ServerInstance $ServerToQuery -Query @"
                         SELECT replica_server_name AS [Server Name]
                         , CASE
                             WHEN replica_server_name=ag.primary_replica THEN 'PRIMARY' 
@@ -197,163 +198,163 @@ TD {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:s
                     WHERE failover_mode_desc = 'AUTOMATIC'
                     ORDER BY 2                        
 "@
-                        if ($CurrentHAInfo.Count -ne 0) {
-                            $PreContent = [string]::Format("<H4>If accessible, the current state of the Availabiligy Groups for [{0}] will be listed below.</H4>", $($HASQLInfo.ServerName -join '; '))
-                            $null = $Body.Add($($CurrentHAInfo | Select-Object -Property 'Server Name', Role, 'Synchronization Health', 'AG Name', 'Failover Mode' | ConvertTo-Html -PreContent $PreContent -Head $CSS | Out-String))
-                        }
-                        else {
-                            $null = $Body.Add("<BR><H5>Unable to acquire SQL-HA AG health information.</H5><BR>")
-                        }
-                    }
-                    catch {
-                        Write-CMLogEntry -Value "Unable to query server that would be primary going forward, HA info will be blank in notification" -Severity 2
-                    }                
-
-                    #endregion Get status for SQL-HA failure notification
-
-                    #region create recipient query
-                    $null = $RecipientQuery.Add($("Select NotificationEmail FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('SQL-HA','ALL') AND [FailureNotification] = 1"))
-                    #endregion create recipient query
-
-                }
-                'Service' {
-                    Write-CMLogEntry "Getting all service info in the DB for [ComputerName=$ComputerName] because of a possible service startup failure"
-                    #region create credential objects
-                    Write-CMLogEntry "Creating necessary credential objects"
-                    $RemotingCreds = Get-StoredCredential -ComputerName $ComputerName -SQLServer $SQLServer -Database $OrchStagingDB
-                    #endregion create credential objects
-
-                    #region initiate CIMSession, looping until one is made, or it has been 10 minutes
-                    Write-CMLogEntry "Creating CIMSession to $ComputerName"
-                    New-LoopAction -LoopTimeout 5 -LoopTimeoutType Minutes -LoopDelay 10 -ExitCondition { $script:CIMSession } -ScriptBlock {
-                        $script:CIMSession = New-MrCimSession -Credential $script:RemotingCreds -ComputerName $script:FQDN
-                    } -IfSucceedScript {
-                        Write-CMLogEntry "CIMSession to $script:ComputerName created succesfully"
-                    } -IfTimeoutScript {
-                        Write-CMLogEntry "Failed to create CIMsession to $script:ComputerName" -Severity 2
-                    }
-                    #endregion initiate CIMSession, looping until one is made, or it has been 10 minutes
-
-                    #region gather 'desired' state of services from the DB
-                    $ServiceStateQuery = [string]::Format("Select [ServiceName] AS [Name], [Status] AS [State], [StartupType] AS [StartMode] from [dbo].[Service] where [ServerName] = '{0}' and [RBInstance] = '{1}'", $ComputerName, $RBInstance)
-                    $DesiredServiceState = Start-CompPatchQuery -Query $ServiceStateQuery
-                    #endregion gather 'desired' state of services from the DB
-
-                    $CurrentServiceState = [System.Collections.ArrayList]::new()
-
-                    #region gather Service info
-                    if ($DesiredServiceState.Count -eq 0) {
-                        #region get service strings and create query
-                        $GetServicesQuery = [string]::Format("Use $OrchStagingDB;Select ServiceStrings from [dbo].[ServerStatus] where ServerName='{0}' and RBInstance='{1}'", $ComputerName, $RBInstance)
-                        $ServiceStrings = Start-CompPatchQuery -Query $GetServicesQuery
-                        $ServiceStrings = $ServiceStrings.ServiceStrings -split ";"
-                        #endregion get service strings and create query
-
-                        #region query the current state of services for notification
-                        if ($ServiceStrings) {
-                            Update-DBServerStatus -LastStatus "Querying Services"
-                            Write-CMLogEntry "Querying for all services matching $($ServiceStrings -join ";") in order to send in notification email"
-                            foreach ($String in $ServiceStrings) {
-                                Get-CimInstance -CimSession $CIMSession -ClassName Win32_Service -Filter "(Name Like '%$String%' or Caption Like '%$String%')" -ErrorAction Stop | Select-Object -Property Name, State, StartMode | ForEach-Object {
-                                    $S = [PSCustomObject]@{
-                                        Name      = $_.Name
-                                        State     = $_.State
-                                        StartMode = $_.StartMode
-                                    }
-                                    $null = $CurrentServiceState.Add($S)
-                                }
+                            if ($CurrentHAInfo.Count -ne 0) {
+                                $PreContent = [string]::Format("<H4>If accessible, the current state of the Availabiligy Groups for [{0}] will be listed below.</H4>", $($HASQLInfo.ServerName -join '; '))
+                                $null = $Body.Add($($CurrentHAInfo | Select-Object -Property 'Server Name', Role, 'Synchronization Health', 'AG Name', 'Failover Mode' | ConvertTo-Html -PreContent $PreContent -Head $CSS | Out-String))
                             }
-                            Update-DBServerStatus -LastStatus "Services Queried"
+                            else {
+                                $null = $Body.Add("<BR><H5>Unable to acquire SQL-HA AG health information.</H5><BR>")
+                            }
+                        }
+                        catch {
+                            Write-CMLogEntry -Value "Unable to query server that would be primary going forward, HA info will be blank in notification" -Severity 2
+                        }                
+
+                        #endregion Get status for SQL-HA failure notification
+
+                        #region create recipient query
+                        $null = $RecipientQuery.Add($("Select NotificationEmail FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('SQL-HA','ALL') AND [FailureNotification] = 1"))
+                        #endregion create recipient query
+
+                    }
+                    'Service' {
+                        Write-CMLogEntry "Getting all service info in the DB for [ComputerName=$ComputerName] because of a possible service startup failure"
+                        #region create credential objects
+                        Write-CMLogEntry "Creating necessary credential objects"
+                        $RemotingCreds = Get-StoredCredential -ComputerName $ComputerName -SQLServer $SQLServer -Database $OrchStagingDB
+                        #endregion create credential objects
+
+                        #region initiate CIMSession, looping until one is made, or it has been 10 minutes
+                        Write-CMLogEntry "Creating CIMSession to $ComputerName"
+                        New-LoopAction -LoopTimeout 5 -LoopTimeoutType Minutes -LoopDelay 10 -ExitCondition { $script:CIMSession } -ScriptBlock {
+                            $script:CIMSession = New-MrCimSession -Credential $script:RemotingCreds -ComputerName $script:FQDN
+                        } -IfSucceedScript {
+                            Write-CMLogEntry "CIMSession to $script:ComputerName created succesfully"
+                        } -IfTimeoutScript {
+                            Write-CMLogEntry "Failed to create CIMsession to $script:ComputerName" -Severity 2
+                        }
+                        #endregion initiate CIMSession, looping until one is made, or it has been 10 minutes
+
+                        #region gather 'desired' state of services from the DB
+                        $ServiceStateQuery = [string]::Format("Select [ServiceName] AS [Name], [Status] AS [State], [StartupType] AS [StartMode] from [dbo].[Service] where [ServerName] = '{0}' and [RBInstance] = '{1}'", $ComputerName, $RBInstance)
+                        $DesiredServiceState = Start-CompPatchQuery -Query $ServiceStateQuery
+                        #endregion gather 'desired' state of services from the DB
+
+                        $CurrentServiceState = [System.Collections.ArrayList]::new()
+
+                        #region gather Service info
+                        if ($DesiredServiceState.Count -eq 0) {
+                            #region get service strings and create query
+                            $GetServicesQuery = [string]::Format("Use $OrchStagingDB;Select ServiceStrings from [dbo].[ServerStatus] where ServerName='{0}' and RBInstance='{1}'", $ComputerName, $RBInstance)
+                            $ServiceStrings = Start-CompPatchQuery -Query $GetServicesQuery
+                            $ServiceStrings = $ServiceStrings.ServiceStrings -split ";"
+                            #endregion get service strings and create query
+
+                            #region query the current state of services for notification
+                            if ($ServiceStrings) {
+                                Update-DBServerStatus -LastStatus "Querying Services"
+                                Write-CMLogEntry "Querying for all services matching $($ServiceStrings -join ";") in order to send in notification email"
+                                foreach ($String in $ServiceStrings) {
+                                    Get-CimInstance -CimSession $CIMSession -ClassName Win32_Service -Filter "(Name Like '%$String%' or Caption Like '%$String%')" -ErrorAction Stop | Select-Object -Property Name, State, StartMode | ForEach-Object {
+                                        $S = [PSCustomObject]@{
+                                            Name      = $_.Name
+                                            State     = $_.State
+                                            StartMode = $_.StartMode
+                                        }
+                                        $null = $CurrentServiceState.Add($S)
+                                    }
+                                }
+                                Update-DBServerStatus -LastStatus "Services Queried"
+                            }
+                            else {
+                                Write-CMLogEntry "No service strings in database for [ComputerName=$ComputerName]"
+                            }
+                            #endregion query the current state of services for notification
                         }
                         else {
-                            Write-CMLogEntry "No service strings in database for [ComputerName=$ComputerName]"
+                            #region gather 'current' state of services from the server
+                            $CurrentServiceState = [System.Collections.ArrayList]::new()
+                            foreach ($S in $DesiredServiceState) {
+                                $ServiceName = $S.Name
+                                $Service = Get-CimInstance -CimSession $script:CIMSession -ClassName Win32_Service -Filter "Name = '$ServiceName'" | Select-Object -Property Name, State, Startmode
+                                $null = $CurrentServiceState.Add($Service)
+                            }
+                            #endregion gather 'current' state of services from the server
                         }
-                        #endregion query the current state of services for notification
-                    }
-                    else {
-                        #region gather 'current' state of services from the server
-                        $CurrentServiceState = [System.Collections.ArrayList]::new()
-                        foreach ($S in $DesiredServiceState) {
-                            $ServiceName = $S.Name
-                            $Service = Get-CimInstance -CimSession $script:CIMSession -ClassName Win32_Service -Filter "Name = '$ServiceName'" | Select-Object -Property Name, State, Startmode
-                            $null = $CurrentServiceState.Add($Service)
+                        #endregion gather Service info
+
+                        if ($script:CIMSession) {
+                            $script:CIMSession.Close()
                         }
-                        #endregion gather 'current' state of services from the server
-                    }
-                    #endregion gather Service info
 
-                    if ($script:CIMSession) {
-                        $script:CIMSession.Close()
-                    }
+                        #region generate email body for desired vs actual service state
+                        if ($CurrentServiceState.Count -ne 0) {
+                            $PreContent = [string]::Format("<H4>A service startup failure may have occurred while patching computer {0} and all log files from the computers in the same grouping are attached. Below is the current service state.</H4>", $ComputerName)
+                            $PostContent = "<H5><i>End current service state</i></H5>"
+                            $null = $Body.Add($($CurrentServiceState | Select-Object -Property Name, State, StartMode | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
+                        }
+                        else {
+                            $null = $Body.Add("<BR><H5>No current service state is available.</H5><BR>")
+                        }
+                        if ($DesiredServiceState.Count -ne 0) {
+                            $PreContent = [string]::Format("<H4>Desired service state based off of service status at start of patching</H4>", $ComputerName)
+                            $PostContent = "<H5><i>End desired service state</i></H5>"
+                            $null = $Body.Add($($DesiredServiceState | Select-Object -Property Name, State, StartMode | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
+                        }
+                        else {
+                            $null = $Body.Add("<BR><H5>No desired service state is available.</H5><BR>")
+                        }
+                        #endregion generate email body for desired vs actual service state
 
-                    #region generate email body for desired vs actual service state
-                    if ($CurrentServiceState.Count -ne 0) {
-                        $PreContent = [string]::Format("<H4>A service startup failure may have occurred while patching computer {0} and all log files from the computers in the same grouping are attached. Below is the current service state.</H4>", $ComputerName)
-                        $PostContent = "<H5><i>End current service state</i></H5>"
-                        $null = $Body.Add($($CurrentServiceState | Select-Object -Property Name, State, StartMode | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
+                        #region create recipient query
+                        $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [FailureNotification] = 1", $Grouping)))
+                        #endregion create recipient query
                     }
-                    else {
-                        $null = $Body.Add("<BR><H5>No current service state is available.</H5><BR>")
-                    }
-                    if ($DesiredServiceState.Count -ne 0) {
-                        $PreContent = [string]::Format("<H4>Desired service state based off of service status at start of patching</H4>", $ComputerName)
-                        $PostContent = "<H5><i>End desired service state</i></H5>"
-                        $null = $Body.Add($($DesiredServiceState | Select-Object -Property Name, State, StartMode | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
-                    }
-                    else {
-                        $null = $Body.Add("<BR><H5>No desired service state is available.</H5><BR>")
-                    }
-                    #endregion generate email body for desired vs actual service state
-
-                    #region create recipient query
-                    $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [FailureNotification] = 1", $Grouping)))
-                    #endregion create recipient query
                 }
             }
-        }
-        'SuccessNotification' {
-            switch ($Process) {
-                'Start' {
-                    switch ($NotifyPer) {
-                        'Server' {
+            'SuccessNotification' {
+                switch ($Process) {
+                    'Start' {
+                        switch ($NotifyPer) {
+                            'Server' {
 
-                        }
-                        'Grouping' {
-                            Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] in order to send a grouping start notification"
-                            #region Get general server info such as number of tiers and estimated runtime
-                            $GroupingQuery = [string]::Format("SELECT [ServerName],[Grouping],[Tier] FROM [dbo].[ServerStatus] WHERE [Grouping] = '{0}' ORDER BY [Tier]", $Grouping)
-                            $GroupingInfo = Start-CompPatchQuery -Query $GroupingQuery
-                            $TotalTiers = $GroupingInfo | Select-Object -ExpandProperty Tier | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
-                            $RunTimeQuery = [string]::Format("SELECT AVG(DurationInMinutes) AS [AverageDuration] FROM [dbo].[PatchingDuration] WHERE [Grouping] = '{0}' AND [DurationInMinutes] IS NOT NULL AND [DryRun] = '{1}'", $Grouping, $DryRun)
-                            $AverageDuration = Start-CompPatchQuery -Query $RunTimeQuery | Select-Object -ExpandProperty AverageDuration
-                            if ([string]::IsNullOrEmpty($AverageDuration)) {
-                                $RunTimeQuery = [string]::Format("SELECT AVG(DurationInMinutes) AS [AverageDuration] FROM [dbo].[PatchingDuration] WHERE [TierCount] = '{0}' AND [DurationInMinutes] IS NOT NULL AND [DryRun] = '{1}'", $TotalTiers, $DryRun)
+                            }
+                            'Grouping' {
+                                Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] in order to send a grouping start notification"
+                                #region Get general server info such as number of tiers and estimated runtime
+                                $GroupingQuery = [string]::Format("SELECT [ServerName],[Grouping],[Tier] FROM [dbo].[ServerStatus] WHERE [Grouping] = '{0}' ORDER BY [Tier]", $Grouping)
+                                $GroupingInfo = Start-CompPatchQuery -Query $GroupingQuery
+                                $TotalTiers = $GroupingInfo | Select-Object -ExpandProperty Tier | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+                                $RunTimeQuery = [string]::Format("SELECT AVG(DurationInMinutes) AS [AverageDuration] FROM [dbo].[PatchingDuration] WHERE [Grouping] = '{0}' AND [DurationInMinutes] IS NOT NULL AND [DryRun] = '{1}'", $Grouping, $DryRun)
                                 $AverageDuration = Start-CompPatchQuery -Query $RunTimeQuery | Select-Object -ExpandProperty AverageDuration
                                 if ([string]::IsNullOrEmpty($AverageDuration)) {
-                                    [int]$AverageDuration = 0
+                                    $RunTimeQuery = [string]::Format("SELECT AVG(DurationInMinutes) AS [AverageDuration] FROM [dbo].[PatchingDuration] WHERE [TierCount] = '{0}' AND [DurationInMinutes] IS NOT NULL AND [DryRun] = '{1}'", $TotalTiers, $DryRun)
+                                    $AverageDuration = Start-CompPatchQuery -Query $RunTimeQuery | Select-Object -ExpandProperty AverageDuration
+                                    if ([string]::IsNullOrEmpty($AverageDuration)) {
+                                        [int]$AverageDuration = 0
+                                    }
                                 }
+                                #endregion Get general server info such as number of tiers and estimated runtime
+
+                                #region Generate table to send with an estimated run time
+                                $PreContent = [string]::Format("<H4>Patching has started for the following grouping: {0} with an estimated duration of {1} minutes</H4>", $Grouping, $AverageDuration)
+                                $PostContent = "<H5><i>Note: If you see an estimated duration of 0 minutes that just means this is a new environment that we were unable to estimate the duration for.</i></H5>"
+                                $null = $Body.Add($($GroupingInfo | Select-Object -Property ServerName, Grouping, Tier | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
+                                #endregion Generate table to send with an estimated run time
+
+                                #region create recipient query, and set email subject
+                                $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [PerGroupNotification] = 1 AND [StartNotification] = 1", $Grouping)))
+                                $Subject = [string]::Format("Patching started for grouping: {0}", $Grouping)
+                                #endregion create recipient query, and set email subject
                             }
-                            #endregion Get general server info such as number of tiers and estimated runtime
-
-                            #region Generate table to send with an estimated run time
-                            $PreContent = [string]::Format("<H4>Patching has started for the following grouping: {0} with an estimated duration of {1} minutes</H4>", $Grouping, $AverageDuration)
-                            $PostContent = "<H5><i>Note: If you see an estimated duration of 0 minutes that just means this is a new environment that we were unable to estimate the duration for.</i></H5>"
-                            $null = $Body.Add($($GroupingInfo | Select-Object -Property ServerName, Grouping, Tier | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
-                            #endregion Generate table to send with an estimated run time
-
-                            #region create recipient query, and set email subject
-                            $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [PerGroupNotification] = 1 AND [StartNotification] = 1", $Grouping)))
-                            $Subject = [string]::Format("Patching started for grouping: {0}", $Grouping)
-                            #endregion create recipient query, and set email subject
                         }
                     }
-                }
-                'End' {
-                    switch ($NotifyPer) {
-                        'Server' {
-                            Write-CMLogEntry "Getting all server info in the DB for [ComputerName=$ComputerName] in order to send a computer finished notification"
-                            #region Get status of all updates logged to SQL DB'
-                            $Query = [string]::Format("
+                    'End' {
+                        switch ($NotifyPer) {
+                            'Server' {
+                                Write-CMLogEntry "Getting all server info in the DB for [ComputerName=$ComputerName] in order to send a computer finished notification"
+                                #region Get status of all updates logged to SQL DB'
+                                $Query = [string]::Format("
     Select  'KB'+SoftwareUpdates.ArticleID AS ArticleID,
             ComplianceState,
             EvaluationState,
@@ -361,21 +362,21 @@ TD {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:s
     FROM [dbo].[SoftwareUpdates]
     WHERE ServerName='{0}'", $ComputerName)
 
-                            $UpdatesInDB = Start-CompPatchQuery -Query $Query
-                            $PreContent = [string]::Format("<H4>Patching has finished for the following computer: {0}</H4>", $ComputerName)
-                            $PostContent = "<H5><i>$(get-date)</i></H5>"
-                            $null = $Body.Add($($UpdatesInDB | Select-Object -Property ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
-                            #endregion Get status of all updates logged to SQL DB
+                                $UpdatesInDB = Start-CompPatchQuery -Query $Query
+                                $PreContent = [string]::Format("<H4>Patching has finished for the following computer: {0}</H4>", $ComputerName)
+                                $PostContent = "<H5><i>$(get-date)</i></H5>"
+                                $null = $Body.Add($($UpdatesInDB | Select-Object -Property ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
+                                #endregion Get status of all updates logged to SQL DB
 
-                            #region create recipient query, and set email subject
-                            $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [PerServerNotification] = 1 AND [EndNotification] = 1", $Grouping)))
-                            $Subject = [string]::Format("Patching finished for Computer: {0}", $ComputerName)
-                            #endregion create recipient query, and set email subject
-                        }
-                        'Grouping' {
-                            #region Get status of all updates logged to SQL DB
-                            Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] in order to send a grouping finished notification"
-                            $Query = [string]::Format("
+                                #region create recipient query, and set email subject
+                                $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [PerServerNotification] = 1 AND [EndNotification] = 1", $Grouping)))
+                                $Subject = [string]::Format("Patching finished for Computer: {0}", $ComputerName)
+                                #endregion create recipient query, and set email subject
+                            }
+                            'Grouping' {
+                                #region Get status of all updates logged to SQL DB
+                                Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] in order to send a grouping finished notification"
+                                $Query = [string]::Format("
     SELECT Distinct ServerStatus.ServerName,
 							 ServerStatus.Status,
                              ServerStatus.Grouping,
@@ -393,107 +394,107 @@ TD {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:s
     WHERE Grouping='{0}'
     ORDER BY Tier", $Grouping)
 
-                            $GroupPatchInfo = Start-CompPatchQuery -Query $Query
-                            #endregion Get status of all updates logged to SQL DB
+                                $GroupPatchInfo = Start-CompPatchQuery -Query $Query
+                                #endregion Get status of all updates logged to SQL DB
 
-                            #region create recipient query, and set email subject
-                            $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [PerGroupNotification] = 1 AND [EndNotification] = 1", $Grouping)))
-                            $Subject = [string]::Format("Patching finished for Grouping: {0}", $Grouping)
-                            #endregion create recipient query, and set email subject
+                                #region create recipient query, and set email subject
+                                $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [PerGroupNotification] = 1 AND [EndNotification] = 1", $Grouping)))
+                                $Subject = [string]::Format("Patching finished for Grouping: {0}", $Grouping)
+                                #endregion create recipient query, and set email subject
 
-                            #region mark EndTime for grouping and calculate duration
-                            [string]$Now = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId((Get-Date), 'Eastern Standard Time')
-                            $StartTimeQuery = [string]::Format("SELECT [StartTime] FROM [dbo].[PatchingDuration] WHERE [Grouping] = '{0}' AND [RBinstance] = '{1}' AND [EndTime] IS NULL", $Grouping, $RBInstance)
-                            [datetime[]]$StartTime = Start-CompPatchQuery -Query $StartTimeQuery | Select-Object -ExpandProperty StartTime
-                            if ($StartTime) {
-                                [string]$StartTime = $StartTime | Sort-Object | Select-Object -Last 1
-                                [int]$Duration = New-TimeSpan -Start $StartTime -End $Now | Select-Object -ExpandProperty TotalMinutes
-                                $Query = [string]::Format("UPDATE [dbo].[PatchingDuration] SET [EndTime] = '{0}', [DurationInMinutes] = {1} WHERE [Grouping] = '{2}' AND [RBinstance] = '{3}'", $Now, $Duration, $Grouping, $RBInstance)
-                                Start-CompPatchQuery -Query $Query
+                                #region mark EndTime for grouping and calculate duration
+                                [string]$Now = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId((Get-Date), 'Eastern Standard Time')
+                                $StartTimeQuery = [string]::Format("SELECT [StartTime] FROM [dbo].[PatchingDuration] WHERE [Grouping] = '{0}' AND [RBinstance] = '{1}' AND [EndTime] IS NULL", $Grouping, $RBInstance)
+                                [datetime[]]$StartTime = Start-CompPatchQuery -Query $StartTimeQuery | Select-Object -ExpandProperty StartTime
+                                if ($StartTime) {
+                                    [string]$StartTime = $StartTime | Sort-Object | Select-Object -Last 1
+                                    [int]$Duration = New-TimeSpan -Start $StartTime -End $Now | Select-Object -ExpandProperty TotalMinutes
+                                    $Query = [string]::Format("UPDATE [dbo].[PatchingDuration] SET [EndTime] = '{0}', [DurationInMinutes] = {1} WHERE [Grouping] = '{2}' AND [RBinstance] = '{3}'", $Now, $Duration, $Grouping, $RBInstance)
+                                    Start-CompPatchQuery -Query $Query
+                                }
+                                if (!$Duration) {
+                                    $Duration = 0
+                                }
+                                #endregion mark EndTime for grouping and calculate duration
+
+                                #region define the HTML that we will email out
+                                $PreContent = [string]::Format("<H4>Patching has finished for the following group: {0} with a total duration of {1} minutes</H4>", $Grouping, $Duration)
+                                $PostContent = "<H5><i>$(get-date)</i></H5>"
+                                $null = $Body.Add($($GroupPatchInfo | Select-Object -Property ServerName, Status, Grouping, LastStatus, PatchStrategy, Role, ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
+                                #endregion define the HTML that we will email out
                             }
-                            if (!$Duration) {
-                                $Duration = 0
-                            }
-                            #endregion mark EndTime for grouping and calculate duration
+                            'Service' {
+                                #region create credential objects
+                                Write-CMLogEntry "Creating necessary credential objects"
+                                $RemotingCreds = Get-StoredCredential -ComputerName $ComputerName -SQLServer $SQLServer -Database $OrchStagingDB
+                                #endregion create credential objects
 
-                            #region define the HTML that we will email out
-                            $PreContent = [string]::Format("<H4>Patching has finished for the following group: {0} with a total duration of {1} minutes</H4>", $Grouping, $Duration)
-                            $PostContent = "<H5><i>$(get-date)</i></H5>"
-                            $null = $Body.Add($($GroupPatchInfo | Select-Object -Property ServerName, Status, Grouping, LastStatus, PatchStrategy, Role, ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
-                            #endregion define the HTML that we will email out
-                        }
-                        'Service' {
-                            #region create credential objects
-                            Write-CMLogEntry "Creating necessary credential objects"
-                            $RemotingCreds = Get-StoredCredential -ComputerName $ComputerName -SQLServer $SQLServer -Database $OrchStagingDB
-                            #endregion create credential objects
+                                #region gather server grouping information
+                                $GroupingQuery = [string]::Format("SELECT [ServerName],[Grouping],[Tier] FROM [dbo].[ServerStatus] WHERE [Grouping] = '{0}' ORDER BY [Tier]", $Grouping)
+                                $GroupingInfo = Start-CompPatchQuery -Query $GroupingQuery
+                                #endregion gather server grouping information
 
-                            #region gather server grouping information
-                            $GroupingQuery = [string]::Format("SELECT [ServerName],[Grouping],[Tier] FROM [dbo].[ServerStatus] WHERE [Grouping] = '{0}' ORDER BY [Tier]", $Grouping)
-                            $GroupingInfo = Start-CompPatchQuery -Query $GroupingQuery
-                            #endregion gather server grouping information
-
-                            foreach ($Server in ($GroupingInfo.ServerName)) {
-                                #region initiate CIMSession, looping until one is made, or it has been 10 minutes
-                                Write-CMLogEntry "Creating CIMSession to $Server"
-                                New-LoopAction -LoopTimeout 1 -LoopTimeoutType Minutes -LoopDelay 10 -ExitCondition { $script:CIMSession } -ScriptBlock {
-                                    $script:CIMSession = New-MrCimSession -Credential $script:RemotingCreds -ComputerName $script:Server
-                                } -IfSucceedScript {
-                                    Write-CMLogEntry "CIMSession to $script:Server created succesfully"
-                                } -IfTimeoutScript {
-                                    Write-CMLogEntry "Failed to create CIMsession to $script:Server" -Severity 2
-                                }
-                                #endregion initiate CIMSession, looping until one is made, or it has been 10 minutes
-
-                                #region get service strings and create query
-                                $GetServicesQuery = [string]::Format("Use $OrchStagingDB;Select ServiceStrings from [dbo].[ServerStatus] where ServerName='{0}' and RBInstance='{1}'", $Server, $RBInstance)
-                                $ServiceStrings = Start-CompPatchQuery -Query $GetServicesQuery
-                                $ServiceStrings = $ServiceStrings.ServiceStrings -split ";"
-                                #endregion get service strings and create query
-
-                                #region gather event logs related to service startup for the past 4 hours
-                                $ServiceEventlogFilter = @{
-                                    LogName      = 'System';
-                                    ProviderName = 'Service Control Manager'
-                                    ID           = 7036
-                                    StartTime    = $((Get-Date).AddHours(-4))
-                                }
-                                $getWinEventSplat = @{
-                                    Credential      = $RemotingCreds
-                                    ComputerName    = $Server
-                                    FilterHashtable = $ServiceEventlogFilter
-                                }
-                                $ServiceStartupEvents = Get-WinEvent @getWinEventSplat
-                                #endregion gather event logs related to service startup for the past 4 hours
-
-                                foreach ($String in $ServiceStrings) {
-                                    $getCimInstanceSplat = @{
-                                        Filter      = "(Name Like '%$String%' or Caption Like '%$String%')"
-                                        CimSession  = $CIMSession
-                                        ErrorAction = 'SilentlyContinue'
-                                        ClassName   = 'Win32_Service'
+                                foreach ($Server in ($GroupingInfo.ServerName)) {
+                                    #region initiate CIMSession, looping until one is made, or it has been 10 minutes
+                                    Write-CMLogEntry "Creating CIMSession to $Server"
+                                    New-LoopAction -LoopTimeout 1 -LoopTimeoutType Minutes -LoopDelay 10 -ExitCondition { $script:CIMSession } -ScriptBlock {
+                                        $script:CIMSession = New-MrCimSession -Credential $script:RemotingCreds -ComputerName $script:Server
+                                    } -IfSucceedScript {
+                                        Write-CMLogEntry "CIMSession to $script:Server created succesfully"
+                                    } -IfTimeoutScript {
+                                        Write-CMLogEntry "Failed to create CIMsession to $script:Server" -Severity 2
                                     }
-                                    $Service = Get-CimInstance @getCimInstanceSplat | Select-Object -Property Name, DisplayName, State, StartMode
-                                    $SearchFilter = [string]::Format("The {0} service entered the running state.", $($Service.DisplayName))
-                                    $StartTime = $ServiceStartupEvents | Where-Object { $_.Message -eq $SearchFilter} | Select-Object -ExpandProperty TimeCreated -First 1
-                                    [PSCustomObject] @{
-                                        ServiceName        = $Service.Name
-                                        ServiceDisplayName = $Service.DisplayName
-                                        ServiceState       = $Service.State
-                                        ServiceStartTime   = $StartTime
+                                    #endregion initiate CIMSession, looping until one is made, or it has been 10 minutes
+
+                                    #region get service strings and create query
+                                    $GetServicesQuery = [string]::Format("Use $OrchStagingDB;Select ServiceStrings from [dbo].[ServerStatus] where ServerName='{0}' and RBInstance='{1}'", $Server, $RBInstance)
+                                    $ServiceStrings = Start-CompPatchQuery -Query $GetServicesQuery
+                                    $ServiceStrings = $ServiceStrings.ServiceStrings -split ";"
+                                    #endregion get service strings and create query
+
+                                    #region gather event logs related to service startup for the past 4 hours
+                                    $ServiceEventlogFilter = @{
+                                        LogName      = 'System';
+                                        ProviderName = 'Service Control Manager'
+                                        ID           = 7036
+                                        StartTime    = $((Get-Date).AddHours(-4))
                                     }
+                                    $getWinEventSplat = @{
+                                        Credential      = $RemotingCreds
+                                        ComputerName    = $Server
+                                        FilterHashtable = $ServiceEventlogFilter
+                                    }
+                                    $ServiceStartupEvents = Get-WinEvent @getWinEventSplat
+                                    #endregion gather event logs related to service startup for the past 4 hours
+
+                                    foreach ($String in $ServiceStrings) {
+                                        $getCimInstanceSplat = @{
+                                            Filter      = "(Name Like '%$String%' or Caption Like '%$String%')"
+                                            CimSession  = $CIMSession
+                                            ErrorAction = 'SilentlyContinue'
+                                            ClassName   = 'Win32_Service'
+                                        }
+                                        $Service = Get-CimInstance @getCimInstanceSplat | Select-Object -Property Name, DisplayName, State, StartMode
+                                        $SearchFilter = [string]::Format("The {0} service entered the running state.", $($Service.DisplayName))
+                                        $StartTime = $ServiceStartupEvents | Where-Object { $_.Message -eq $SearchFilter } | Select-Object -ExpandProperty TimeCreated -First 1
+                                        [PSCustomObject] @{
+                                            ServiceName        = $Service.Name
+                                            ServiceDisplayName = $Service.DisplayName
+                                            ServiceState       = $Service.State
+                                            ServiceStartTime   = $StartTime
+                                        }
+                                    }
+                                    $CIMSession.Close()
                                 }
-                                $CIMSession.Close()
                             }
                         }
                     }
                 }
             }
-        }
-        'TimeoutNotification' {
-            Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] because of a time during the $During process for [ComputerName=$ComputerName]"
-            #region Get status of all updates logged to SQL DB'
-            $Query = [string]::Format("
+            'TimeoutNotification' {
+                Write-CMLogEntry "Getting all server info in the DB for [Grouping=$Grouping] because of a time during the $During process for [ComputerName=$ComputerName]"
+                #region Get status of all updates logged to SQL DB'
+                $Query = [string]::Format("
 SELECT Distinct ServerStatus.ServerName,
                      ServerStatus.Status,
                      ServerStatus.Grouping,
@@ -511,67 +512,68 @@ LEFT JOIN SoftwareUpdates ON ServerStatus.ServerName = SoftwareUpdates.ServerNam
 WHERE Grouping='{0}'
 ORDER BY Tier", $Grouping)
 
-            $UpdatesInDB = Start-CompPatchQuery -Query $Query
-            $PreContent = [string]::Format("<H4>A timeout has occurred for {1} while waiting on the {1} process. All log files from the computers in the same grouping are attached, and a table outlining the current status at the time of the timeout is below. </H4>", $ComputerName, $Grouping)
-            $PostContent = "<H5><i>$(get-date)</i></H5>"
-            $null = $Body.Add($($UpdatesInDB | Select-Object -Property ServerName, Status, Grouping, LastStatus, PatchStrategy, Role, ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
-            #endregion Get status of all updates logged to SQL DB}
+                $UpdatesInDB = Start-CompPatchQuery -Query $Query
+                $PreContent = [string]::Format("<H4>A timeout has occurred for {1} while waiting on the {1} process. All log files from the computers in the same grouping are attached, and a table outlining the current status at the time of the timeout is below. </H4>", $ComputerName, $Grouping)
+                $PostContent = "<H5><i>$(get-date)</i></H5>"
+                $null = $Body.Add($($UpdatesInDB | Select-Object -Property ServerName, Status, Grouping, LastStatus, PatchStrategy, Role, ArticleID, ComplianceState, EvaluationState, LastAction | ConvertTo-Html -PreContent $PreContent -PostContent $PostContent -Head $CSS | Out-String))
+                #endregion Get status of all updates logged to SQL DB}
 
-            #region create recipient query, mark to attach logs and set email subject
-            $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [FailureNotification] = 1", $Grouping)))
-            $AttachLogs = $true
-            $Subject = [string]::Format("Patching timeout during {0} for Computer: {1}", $During, $ComputerName)
-            #endregion create recipient query, mark to attach logs and set email subject
+                #region create recipient query, mark to attach logs and set email subject
+                $null = $RecipientQuery.Add($([string]::Format("Select [NotificationEmail] FROM [dbo].[ServerNotification] WHERE [Grouping] IN ('{0}','ALL') AND [FailureNotification] = 1", $Grouping)))
+                $AttachLogs = $true
+                $Subject = [string]::Format("Patching timeout during {0} for Computer: {1}", $During, $ComputerName)
+                #endregion create recipient query, mark to attach logs and set email subject
+            }
         }
-    }
-    #region create parameter set for the notification, attach logs if marked to do so
-    $NotificationRecipients = [System.Collections.ArrayList]::new()
-    foreach ($Query in ($RecipientQuery | Select-Object -Unique)) {
-        Start-CompPatchQuery -Query $Query | Select-Object -ExpandProperty NotificationEmail | ForEach-Object {
-            $null = $NotificationRecipients.Add($_)
+        #region create parameter set for the notification, attach logs if marked to do so
+        $NotificationRecipients = [System.Collections.ArrayList]::new()
+        foreach ($Query in ($RecipientQuery | Select-Object -Unique)) {
+            Start-CompPatchQuery -Query $Query | Select-Object -ExpandProperty NotificationEmail | ForEach-Object {
+                $null = $NotificationRecipients.Add($_)
+            }
         }
-    }
-    $NotificationRecipients = $NotificationRecipients | Select-Object -Unique
-    $FullBody = [string]::Join('<br><br>', @($Body))
+        $NotificationRecipients = $NotificationRecipients | Select-Object -Unique
+        $FullBody = [string]::Join('<br><br>', @($Body))
 
-    if ($NotificationRecipients) {
-        $Log = [string]::Format("Sending notification with following parameters [From={0}] [SmtpServer={1}] [To={2}] [Subject={3}] [AttachLogs={4}]", $FromAddress, $SMTPServer, $($NotificationRecipients -join ';'), $Subject, $AttachLogs)
-        Write-CMLogEntry $Log
-        $MailParams = @{
-            From       = $FromAddress
-            SmtpServer = $SMTPServer
-            To         = $NotificationRecipients
-            BodyAsHtml = $true
-            Body       = $FullBody
-            Subject    = $Subject
+        if ($NotificationRecipients) {
+            $Log = [string]::Format("Sending notification with following parameters [From={0}] [SmtpServer={1}] [To={2}] [Subject={3}] [AttachLogs={4}]", $FromAddress, $SMTPServer, $($NotificationRecipients -join ';'), $Subject, $AttachLogs)
+            Write-CMLogEntry $Log
+            $MailParams = @{
+                From       = $FromAddress
+                SmtpServer = $SMTPServer
+                To         = $NotificationRecipients
+                BodyAsHtml = $true
+                Body       = $FullBody
+                Subject    = $Subject
+            }
+            if ($AttachLogs) {
+                $LogFilter = [string]::Format("{0}-*.log", $RBInstance)
+                $Attachments = Get-ChildItem -Path $LogLocation -Filter $LogFilter | Select-Object -ExpandProperty FullName
+                $MailParams.Add('Attachments', $Attachments)
+            }
+            Send-MailMessage @MailParams
         }
-        if ($AttachLogs) {
-            $LogFilter = [string]::Format("{0}-*.log", $RBInstance)
-            $Attachments = Get-ChildItem -Path $LogLocation -Filter $LogFilter | Select-Object -ExpandProperty FullName
-            $MailParams.Add('Attachments', $Attachments)
+        else {
+            Write-CMLogEntry "No notification recipients identified for Queries [$(($RecipientQuery | Select-Object -Unique) -join '; ')]"
         }
-        Send-MailMessage @MailParams
+        #endregion create parameter set for the notification, attach logs if marked to do so
     }
-    else {
-        Write-CMLogEntry "No notification recipients identified for Queries [$(($RecipientQuery | Select-Object -Unique) -join '; ')]"
+    catch {
+        # Catch any errors thrown above here, setting the result status and recording the error message to return to the activity for data bus publishing
+        $ResultStatus = "Failed"
+        $ErrorMessage = $error[0].Exception.Message
+        Write-CMLogEntry "Exception caught during action [$global:CurrentAction]: $ErrorMessage" -Severity 3
     }
-    #endregion create parameter set for the notification, attach logs if marked to do so
-}
-catch {
-    # Catch any errors thrown above here, setting the result status and recording the error message to return to the activity for data bus publishing
-    $ResultStatus = "Failed"
-    $ErrorMessage = $error[0].Exception.Message
-    Write-CMLogEntry "Exception caught during action [$global:CurrentAction]: $ErrorMessage" -Severity 3
-}
-finally {
-    # Always do whatever is in the finally block. In this case, adding some additional detail about the outcome to the trace log for return
-    if ($ErrorMessage.Length -gt 0) {
-        Write-CMLogEntry "Exiting script with result [$ResultStatus] and error message [$ErrorMessage]" -Severity 3
+    finally {
+        # Always do whatever is in the finally block. In this case, adding some additional detail about the outcome to the trace log for return
+        if ($ErrorMessage.Length -gt 0) {
+            Write-CMLogEntry "Exiting script with result [$ResultStatus] and error message [$ErrorMessage]" -Severity 3
+        }
+        else {
+            Write-CMLogEntry "Exiting script with result [$ResultStatus]"
+        }
     }
-    else {
-        Write-CMLogEntry "Exiting script with result [$ResultStatus]"
-    }
-}
 
-# Record end of activity script process
-Write-CMLogEntry "Script finished"
+    # Record end of activity script process
+    Write-CMLogEntry "Script finished"
+}

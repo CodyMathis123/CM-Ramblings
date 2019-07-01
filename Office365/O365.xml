@@ -1,6 +1,6 @@
 <Configuration>
     <Info Description="Office 365" />
-    <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" Version="16.0.10730.20334" ForceUpgrade="TRUE" AllowCdnFallback="True">
+    <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE" AllowCdnFallback="True">
         <Product ID="O365ProPlusRetail">
             <Language ID="MatchOS" Fallback="en-us" />
             <Language ID="es-es" />
@@ -13,6 +13,7 @@
     <RemoveMSI All="TRUE" />
     <AppSettings>
         <Setup Name="Company" Value="Contoso" />
+        <User Value="1" Name="donotcreatenewostonupgrade" Id="L_DoNotCreateNewOstOnUpgrade" App="outlk16" Type="REG_DWORD" Key="software\microsoft\office\16.0\outlook\ost" />
     </AppSettings>
     <Display Level="Full" AcceptEULA="TRUE" />
     <Logging Level="Standard" Path="%TEMP%" />

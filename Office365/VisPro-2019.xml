@@ -1,0 +1,42 @@
+<Configuration>
+	<Info Description="Visio Professional 2019" />
+	<Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE" AllowCdnFallback="True">
+		<Product ID="VisioPro2019Volume">
+			<Language ID="en-us" />
+			<Language ID="es-es" />
+			<Language ID="pt-br" />
+			<Language ID="MatchPreviousMSI" />
+		</Product>
+	</Add>
+	<Remove All="FALSE">
+		<Product ID="VisioStd2019Volume">
+			<Language ID="en-us" />
+			<Language ID="es-es" />
+			<Language ID="pt-br" />
+		</Product>
+		<Product ID="VisioProXVolume">
+			<Language ID="en-us" />
+			<Language ID="es-es" />
+			<Language ID="pt-br" />
+		</Product>
+		<Product ID="VisioStdXVolume">
+			<Language ID="en-us" />
+			<Language ID="es-es" />
+			<Language ID="pt-br" />
+		</Product>
+		<Product ID="VisioProRetail">
+			<Language ID="en-us" />
+			<Language ID="es-es" />
+			<Language ID="pt-br" />
+		</Product>
+	</Remove>
+	<Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+	<Updates Enabled="TRUE" />
+	<RemoveMSI ALL="TRUE" />
+	<AppSettings>
+		<Setup Name="Company" Value="Contoso" />
+	</AppSettings>
+	<Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+	<Display Level="Full" AcceptEULA="TRUE" />
+	<Logging Level="Standard" Path="%TEMP%" />
+</Configuration>

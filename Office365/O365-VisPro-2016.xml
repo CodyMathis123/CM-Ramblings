@@ -1,6 +1,6 @@
 <Configuration>
     <Info Description="Office 365 with Visio Pro 2016" />
-    <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" Version="16.0.10730.20334" ForceUpgrade="TRUE" AllowCdnFallback="True">
+    <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE" AllowCdnFallback="True">
         <Product ID="O365ProPlusRetail">
             <Language ID="MatchOS" Fallback="en-us" />
             <Language ID="es-es" />
@@ -17,10 +17,55 @@
     </Add>
     <RemoveMSI All="TRUE" />
     <Remove All="FALSE">
-        <Product ID="VisioStdXVolume" />
+        <Product ID="ProjectStd2019Volume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="ProjectPro2019Volume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="ProjectProRetail">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="ProjectStdXVolume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="ProjectProXVolume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="VisioPro2019Volume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="VisioStd2019Volume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="VisioStdXVolume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="VisioProRetail">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
     </Remove>
     <AppSettings>
         <Setup Name="Company" Value="Contoso" />
+        <User Value="1" Name="donotcreatenewostonupgrade" Id="L_DoNotCreateNewOstOnUpgrade" App="outlk16" Type="REG_DWORD" Key="software\microsoft\office\16.0\outlook\ost" />
     </AppSettings>
     <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
     <Display Level="Full" AcceptEULA="TRUE" />

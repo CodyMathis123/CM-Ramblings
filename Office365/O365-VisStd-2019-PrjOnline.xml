@@ -1,5 +1,5 @@
 <Configuration>
-    <Info Description="Office 365 with Visio Pro and Project Standard 2019" />
+    <Info Description="Office 365 with Visio Standard 2019 and Project Online" />
     <Add OfficeClientEdition="32" Channel="Broad" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE" AllowCdnFallback="True">
         <Product ID="O365ProPlusRetail">
             <Language ID="MatchOS" Fallback="en-us" />
@@ -8,13 +8,13 @@
             <Language ID="MatchPreviousMSI" />
             <ExcludeApp ID="Groove" />
         </Product>
-        <Product ID="VisioPro2019Volume">
+        <Product ID="ProjectProRetail">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />
             <Language ID="MatchPreviousMSI" />
         </Product>
-        <Product ID="ProjectStd2019Volume">
+        <Product ID="VisioStd2019Volume">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />
@@ -23,17 +23,12 @@
     </Add>
     <RemoveMSI All="TRUE" />
     <Remove All="FALSE">
+        <Product ID="ProjectStd2019Volume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
         <Product ID="ProjectPro2019Volume">
-            <Language ID="en-us" />
-            <Language ID="es-es" />
-            <Language ID="pt-br" />
-        </Product>
-        <Product ID="ProjectProRetail">
-            <Language ID="en-us" />
-            <Language ID="es-es" />
-            <Language ID="pt-br" />
-        </Product>
-        <Product ID="ProjectStdXVolume">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />
@@ -43,17 +38,22 @@
             <Language ID="es-es" />
             <Language ID="pt-br" />
         </Product>
-        <Product ID="VisioStd2019Volume">
+        <Product ID="ProjectStdXVolume">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />
         </Product>
-        <Product ID="VisioStdXVolume">
+        <Product ID="VisioPro2019Volume">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />
         </Product>
         <Product ID="VisioProXVolume">
+            <Language ID="en-us" />
+            <Language ID="es-es" />
+            <Language ID="pt-br" />
+        </Product>
+        <Product ID="VisioStdXVolume">
             <Language ID="en-us" />
             <Language ID="es-es" />
             <Language ID="pt-br" />

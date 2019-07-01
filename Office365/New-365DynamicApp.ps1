@@ -3,14 +3,14 @@
     Generate an Office 365 application for use in Configuration Manager that has a deployment type per app combination
 .DESCRIPTION
     This script will take your desired input parameters to generate an application with various deployment types.
-    The use case is an upgrade from an older version of Microsoft Office to Office 365. The correct combination of
+    The use case is an upgrade from an older version of Microsoft Office to Office 365. The correct combination of-_
     applications will be selected and installed based on Global Conditions assinged as requirements for the various
-    deployment types. You also can select your desired Update Channe, Bitness, license type, Company Name, as well as
+    deployment types. You also can select your desired Update Channel, Bitness, license type, Company Name, as well as
     other options.
 .PARAMETER SMSProvider
     Provides the name for the SMSProvider for the environment you want to create the application in.
 .PARAMETER ApplicationName
-    Provides the name which you want assigned to the application that is created by this script.
+    Provides the name which you want assigned to the application tha+t is created by this script.
 .PARAMETER Company
     Provides the company name you want specified in all of the XML files.
 .PARAMETER AppRoot
@@ -19,20 +19,25 @@
 .PARAMETER Bitness
     Provides the desired architecture for the deployment types. All of the XML will be updated with this value.
     'x86', 'x64'
-.PARAMETER VisioLicense
+.PARAMETER VisioProLicense
     Allows you to select the license type which you are licensed for. This will be either 'Online' or 'Volume'
-    Note that if 'Volume' is selected, you will see that Visio 2016 as well as 2019 deployment types are created, and have requirements
+    Note that if 'Volume' is selected, you will see that Visio Pro 2016 as well as 2019 deployment types are created, and have requirements
     for Windows 7 or 8/8.1 attached to them. Visio 2019 deployment types are targeted at Windows 10.
-.PARAMETER ProjectLicense
+.PARAMETER VisioStandardLicense
     Allows you to select the license type which you are licensed for. This will be either 'Online' or 'Volume'
-    Note that if 'Volume' is selected, you will see that Project 2016 as well as 2019 deployment types are created, and have requirements
+    Note that if 'Volume' is selected, you will see that Visio Standard 2016 as well as 2019 deployment types are created, and have requirements
+    for Windows 7 or 8/8.1 attached to them. Visio 2019 deployment types are targeted at Windows 10.
+.PARAMETER ProjectProLicense
+    Allows you to select the license type which you are licensed for. This will be either 'Online' or 'Volume'
+    Note that if 'Volume' is selected, you will see that Project Pro 2016 as well as 2019 deployment types are created, and have requirements
+    for Windows 7 or 8/8.1 attached to them. Project 2019 deployment types are targeted at Windows 10.
+.PARAMETER ProjectStdLicense
+    Allows you to select the license type which you are licensed for. This will be either 'Online' or 'Volume'
+    Note that if 'Volume' is selected, you will see that Project Standard 2016 as well as 2019 deployment types are created, and have requirements
     for Windows 7 or 8/8.1 attached to them. Project 2019 deployment types are targeted at Windows 10.
 .PARAMETER UpdateChannel
     Provides the desired Update Channel for the deployment types. All of the XML will be updated with this value.
     'Semi-Annual', 'Semi-AnnualTargeted', 'Monthly', 'MonthlyTargeted'
-.PARAMETER Version
-    Provides the desired Version for the Office 365 installation. All of the XML will be updated with this value.
-    By default, we attempt to gather the latest deployed patch version based on the Update Channel selected.
 .PARAMETER AllowCdnFallback
     A boolean value that will be set in the XML files. This will allow your clients to fallback to the Content Delivery Network (CDN)
     aka 'the cloud.'
@@ -41,42 +46,48 @@
     with this value. 
 .EXAMPLE
     C:\PS> $new365DynamicApp = @{
-        SMSProvider         = 'SCCM'
-        AppRoot             = '\\sccm\sources\O365-Dynamic'
-        ApplicationName     = 'Office 365 - Dynamic'
-        VisioLicense        = 'Volume'
-        ProjectLicense      = 'Volume'
-        Company             = 'Contoso'
-        Bitness             = 'x64'
-        UpdateChannel       = 'Semi-Annual'
-        DisplayLevel        = 'None'
+        SMSProvider            = 'SCCM'
+        AppRoot                = '\\sccm\sources\O365-Dynamic'
+        ApplicationName        = 'Office 365 - Dynamic'
+        VisioProLicense        = 'Volume'
+        VisioStandardLicense   = 'Volume'
+        ProjectProLicense      = 'Online'
+        ProjectStandardLicense = 'Volume'
+        Company                = 'Contoso'
+        Bitness                = 'x64'
+        UpdateChannel          = 'Semi-Annual'
+        DisplayLevel           = 'None'
     }
     New-365DynamicApp.ps1 @new365DynamicApp
 .EXAMPLE
     C:\PS> $new365DynamicApp = @{
-        SMSProvider         = 'SCCM'
-        AppRoot             = '\\sccm\sources\O365-Dynamic'
-        ApplicationName     = 'Office 365 - Dynamic'
-        VisioLicense        = 'Online'
-        ProjectLicense      = 'Online'
-        Company             = 'Contoso'
-        Bitness             = 'x64'
-        UpdateChannel       = 'Monthly'
-        AllowCdnFallback    = $false
+        SMSProvider            = 'SCCM'
+        AppRoot                = '\\sccm\sources\O365-Dynamic'
+        ApplicationName        = 'Office 365 - Dynamic'
+        VisioProLicense        = 'Volume'
+        VisioStandardLicense   = 'Volume'
+        ProjectProLicense      = 'Online'
+        ProjectStandardLicense = 'Online'
+        Company                = 'Contoso'
+        Bitness                = 'x64'
+        UpdateChannel          = 'Monthly'
+        AllowCdnFallback       = $false
     }
     New-365DynamicApp.ps1 @new365DynamicApp
 .EXAMPLE
     C:\PS> $new365DynamicApp = @{
-        SMSProvider         = 'SCCM'
-        AppRoot             = '\\sccm\sources\O365-Dynamic'
-        ApplicationName     = 'Office 365 - Dynamic'
-        VisioLicense        = 'Volume'
-        ProjectLicense      = 'Online'
-        Company             = 'Contoso'
-        Bitness             = 'x64'
-        UpdateChannel       = 'Monthly'
-        AllowCdnFallback    = 'true'
-        DisplayLevel        = 'Full'
+        SMSProvider            = 'SCCM'
+        AppRoot                = '\\sccm\sources\O365-Dynamic'
+        ApplicationName        = 'Office 365 - Dynamic'
+        VisioProLicense        = 'Online'
+        VisioStandardLicense   = 'Online'
+        ProjectProLicense      = 'Online'
+        ProjectStandardLicense = 'Online'
+        Company                = 'Contoso'
+        Bitness                = 'x64'
+        UpdateChannel          = 'Monthly'
+        AllowCdnFallback       = 'true'
+        DisplayLevel           = 'Full'
     }
     New-365DynamicApp.ps1 @new365DynamicApp
 .NOTES
@@ -84,7 +95,7 @@
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     2019-05-01
-    Updated:     2019-05-02
+    Updated:     2019-06-27
 
     It is a good idea to run 'setup.exe /download O365.xml' once. The good news is, every single application combination uses the exact
     same Office 365 binaries. These XML by default do have AllowCdnFallback="True" set, so they will download directly from Microsoft
@@ -110,15 +121,19 @@ param(
     [string]$Bitness,
     [parameter(Mandatory = $true)]
     [validateset('Online', 'Volume')]
-    [string]$VisioLicense,
+    [string]$VisioProLicense,
     [parameter(Mandatory = $true)]
     [validateset('Online', 'Volume')]
-    [string]$ProjectLicense,
+    [string]$VisioStandardLicense,
+    [parameter(Mandatory = $true)]
+    [validateset('Online', 'Volume')]
+    [string]$ProjectProLicense,
+    [parameter(Mandatory = $true)]
+    [validateset('Online', 'Volume')]
+    [string]$ProjectStandardLicense,
     [parameter(Mandatory = $false)]
     [validateset('Semi-Annual', 'Semi-AnnualTargeted', 'Monthly', 'MonthlyTargeted')]
     [string]$UpdateChannel = 'Semi-Annual',
-    [parameter(Mandatory = $false)]
-    [string]$Version,
     [parameter(Mandatory = $false)]
     [bool]$AllowCdnFallback = $true,
     [parameter(Mandatory = $false)]
@@ -131,31 +146,79 @@ $SiteCodePath = "$SiteCode`:"
 Set-Location -Path C:
 
 #region Gather all the relevant XML files and filter based on the license type
-$AllXML_Configs = Get-ChildItem -Path $AppRoot -Filter *.xml
-switch ($VisioLicense) {
+$AllXML_Configs = Get-ChildItem -Path $AppRoot -Filter 'O365*.xml'
+
+$VisioKeepFilter = [system.Collections.ArrayList]::new()
+$VisioIgnoreFilter = [system.Collections.ArrayList]::new()
+$ProjectKeepFilter = [system.Collections.ArrayList]::new()
+$ProjectIgnoreFilter = [system.Collections.ArrayList]::new()
+
+switch ($VisioProLicense) {
     'Online' {
-        $VisKeepFilter = "`$_.Name -match 'VisOnline'"
-        $VisIgnoreFilter = "`$_.Name -notmatch 'VisStd|VisPro'"
+        $null = $VisioKeepFilter.Add("VisOnline")
+        $null = $VisioIgnoreFilter.Add("VisPro")
     }
     'Volume' {
-        $VisKeepFilter = "`$_.Name -match 'VisStd|VisPro'"
-        $VisIgnoreFilter = "`$_.Name -notmatch 'VisOnline'"
+        $null = $VisioKeepFilter.Add("VisPro")
+        $null = $VisioIgnoreFilter.Add("VisOnline")
     }
 }
-switch ($ProjectLicense) {
+switch ($VisioStandardLicense) {
     'Online' {
-        $PrjKeepFilter = "`$_.Name -match 'PrjOnline'"
-        $PrjIgnoreFilter = "`$_.Name -notmatch 'PrjStd|PrjPro'"
+        $null = $VisioKeepFilter.Add("VisOnline")
+        $null = $VisioIgnoreFilter.Add("VisStd")
     }
     'Volume' {
-        $PrjKeepFilter = "`$_.Name -match 'PrjStd|PrjPro'"
-        $PrjIgnoreFilter = "`$_.Name -notmatch 'PrjOnline'"
+        $null = $VisioKeepFilter.Add("VisStd")
+        $null = $VisioIgnoreFilter.Add("VisOnline")
     }
 }
-$Filter = [string]::Format("({0} -or {1} -or `$_.Name -eq 'O365.xml') -and {2} -and {3}", $VisKeepFilter, $PrjKeepFilter, $VisIgnoreFilter, $PrjIgnoreFilter)
+switch ($ProjectProLicense) {
+    'Online' {
+        $null = $ProjectKeepFilter.Add("PrjOnline")
+        $null = $ProjectIgnoreFilter.Add("PrjPro")
+    }
+    'Volume' {
+        $null = $ProjectKeepFilter.Add("PrjPro")
+        $null = $ProjectIgnoreFilter.Add("PrjOnline")
+    }
+}
+switch ($ProjectStandardLicense) {
+    'Online' {
+        $null = $ProjectKeepFilter.Add("PrjOnline")
+        $null = $ProjectIgnoreFilter.Add("PrjStd")
+    }
+    'Volume' {
+        $null = $ProjectKeepFilter.Add("PrjStd")
+        $null = $ProjectIgnoreFilter.Add("PrjOnline")
+    }
+}
+
+$VisioKeepFilterJoined = $(foreach ($Filter in $VisioKeepFilter) {
+        [string]::Format("`$_.Name -match '$Filter'")
+    }) -join ' -or '
+$ProjectKeepFilterJoined = $(foreach ($Filter in $ProjectKeepFilter) {
+        [string]::Format("`$_.Name -match '$Filter'")
+    }) -join ' -or '
+
+$KeepFilter = [string]::Format(" {0} -or {1} ", $VisioKeepFilterJoined, $ProjectKeepFilterJoined)
+
+$VisioIgnoreFilter = $VisioIgnoreFilter | Where-Object { $_ -notin $VisioKeepFilter } | Select-Object -Unique
+$ProjectIgnoreFilter = $ProjectIgnoreFilter | Where-Object { $_ -notin $ProjectKeepFilter } | Select-Object -Unique
+
+$VisioIgnoreFilterJoined = $(foreach ($Filter in $VisioIgnoreFilter) {
+        [string]::Format("`$_.Name -notmatch '$Filter'")
+    }) -join ' -and '
+$ProjectIgnoreFilterJoined = $(foreach ($Filter in $ProjectIgnoreFilter) {
+        [string]::Format("`$_.Name -notmatch '$Filter'")
+    }) -join ' -and '
+
+$IgnoreFilter = [string]::Format(" {0} -and {1} ", $VisioIgnoreFilterJoined, $ProjectIgnoreFilterJoined)
+
+$Filter = [string]::Format("({0} -or `$_.Name -eq 'O365.xml') -and {1}", $KeepFilter, $IgnoreFilter)
 $FilteredXML_Configs = $AllXML_Configs | Where-Object { & ([scriptblock]::Create($Filter)) }
 foreach ($File in $FilteredXML_Configs) {
-    Write-Verbose "$($File.Name) selected based on [VisioLicense=$VisioLicense] [ProjectLicense=$ProjectLicense]"
+    Write-Verbose "$($File.Name) selected based on [VisioProLicense=$VisioProLicense] [VisioStandardLicense=$VisioStandardLicense] [ProjectProLicense=$ProjectProLicense] [ProjectStdLicense=$ProjectStdLicense]"
 }
 #endregion Gather all the relevant XML files and filter based on the license type
 
@@ -248,7 +311,7 @@ function Get-CMOfficeGlobalCondition {
 
 Set-Location -Path $SiteCodePath
 Write-Output $('-' * 50)
-Write-Output "Identifying and creating global conditions as needed for detection of Visio/Project Pro/Standard"
+Write-Output "Identifying and creating global conditions as needed for detection of Visio/Project Pro/Standard/Online"
 $VisStandard_GC = Get-CMOfficeGlobalCondition -Application 'Visio Standard'
 $VisPro_GC = Get-CMOfficeGlobalCondition -Application 'Visio Professional'
 $Vis_GC = Get-CMOfficeGlobalCondition -Application Visio
@@ -286,54 +349,23 @@ $XML_Bitness = switch ($Bitness) {
 }
 #endregion generate variable for XML friendly bitness
 
-#region determine version based on deployed update, or from input parameter
+#region translate Channel to XML
 switch ($UpdateChannel) {
     'Semi-Annual' {
-        $Channel = 'Semi-Annual Channel'
         $XML_Channel = 'Broad'
     }
     'Semi-AnnualTargeted' {
-        $Channel = 'Semi-Annual Channel (Targeted)'
         $XML_Channel = 'Targeted'
     }
     'Monthly' {
-        $Channel = 'Monthly Channel'
         $XML_Channel = $_
     }
     'MonthlyTargeted' {
-        $Channel = 'Monthly Channel (Targeted)'
         $XML_Channel = 'Insiders'
     }
 }
 Write-Verbose "Based on input paramater [UpdateChannel=$UpdateChannel] a value of [Channel=$XML_Channel] will be used for all XML"
-
-if (-not $PSBoundParameters.ContainsKey('Version')) {
-    Write-Output $('-' * 50)
-    Write-Output "Based on input paramater [UpdateChannel=$UpdateChannel] a value of [Channel=$Channel] will be used to search SCCM for the latest deployed O365 update"
-    $getWmiObjectSplat = @{
-        Query        = "SELECT LocalizedDisplayName FROM SMS_SoftwareUpdate WHERE LocalizedDisplayName LIKE 'Office 365 Client Update - $Channel%$Bitness%' AND IsDeployed = '1' AND IsLatest = '1'"
-        ComputerName = $SMSProvider
-        Namespace    = "root\sms\site_$SiteCode"
-    }
-    $365Patches = Get-WmiObject @getWmiObjectSplat | Select-Object -ExpandProperty LocalizedDisplayName
-    if ($365Patches.Count -gt 0) {
-        $Regex = "\(Build ([0-9]+\.[0-9]+)\)"
-        [double[]]$Builds = foreach ($Value in $365Patches) {
-            [regex]::Match($Value, $Regex).Groups[1].Value
-        }
-        $LatestBuild = ($Builds | Sort-Object | Select-Object -Last 1).ToString()
-        $FullBuildNumber = [string]::Format('16.0.{0}', $LatestBuild)
-        Write-Output "Identified O365 [Version=$FullBuildNumber] as the latest deployed version for [Channel=$Channel] - This value will be used to update all XML"
-    }
-    else {
-        Write-Error -Message "Failed to identify Office 365 version based on the input. This likely means you are not deploying updates for the specified architecture and update channel." -ErrorAction Stop
-    }
-}
-else {
-    $FullBuildNumber = $Version
-    Write-Verbose "[Version=$FullBuildNumber] will be used based on input parameter."
-}
-#endregion determine version based on deployed updates, or from input parameter
+#endregion translate Channel to XML
 
 #region generate PSCustomObject that we will loop through to create DeploymentTypes
 $DeploymentTypes = foreach ($XML in $FilteredXML_Configs) {
@@ -342,11 +374,11 @@ $DeploymentTypes = foreach ($XML in $FilteredXML_Configs) {
     $ConfigXML = [xml]::new()
     $ConfigXML.PreserveWhitespace = $true
     $ConfigXML.Load($XML.FullName)
+    $AppSource = $XML.Directory.Parent.FullName
     $ConfigXML.Configuration.AppSettings.Setup.Value = $Company
     $ConfigXML.Configuration.Add.OfficeClientEdition = $XML_Bitness
-    $ConfigXML.Configuration.Add.Version = $FullBuildNumber
     $ConfigXML.Configuration.Add.Channel = $XML_Channel
-    $ConfigXml.Configuration.Add.AllowCdnFallback = "$($AllowCdnFallback | Out-String)"
+    $ConfigXml.Configuration.Add.AllowCdnFallback = "$($AllowCdnFallback.ToString())"
     $ConfigXml.Configuration.Display.Level = $DisplayLevel
     $ConfigXML.Save($XML.FullName)
     $AppName = $ConfigXML.Configuration.Info.Description
@@ -460,31 +492,53 @@ try {
         $Requirements = [System.Collections.ArrayList]::new()
         switch -Regex ($DT.ProductIDs) {
             '^VisioPro(X|2019)Volume$' {
+                Write-Verbose "Adding rule to deployment type for $_"
                 $null = $Requirements.Add($VisPro_Rule)
             }
             '^VisioStd(X|2019)Volume$' {
+                Write-Verbose "Adding rule to deployment type for $_"
                 $null = $Requirements.Add($VisStandard_Rule)
             }
             '^VisioProRetail$' {
-                $null = $Requirements.Add($Vis_Rule)
+                Write-Verbose "Adding rule to deployment type for $_"
+                switch ($VisioStandardLicense) {
+                    'Online' {
+                        $null = $Requirements.Add($Vis_Rule)
+                    }
+                    'Volume' {
+                        $null = $Requirements.Add($VisPro_Rule)
+                    }
+                }
             }
             '^ProjectPro(X|2019)Volume$' {
+                Write-Verbose "Adding rule to deployment type for $_"
                 $null = $Requirements.Add($ProjPro_Rule)
             }
             '^ProjectStd(X|2019)Volume$' {
+                Write-Verbose "Adding rule to deployment type for $_"
                 $null = $Requirements.Add($ProjStandard_Rule)
             }
             '^ProjectProRetail$' {
-                $null = $Requirements.Add($Proj_Rule)
+                Write-Verbose "Adding rule to deployment type for $_"
+                switch ($ProjectStandardLicense) {
+                    'Online' {
+                        $null = $Requirements.Add($Proj_Rule)
+                    }
+                    'Volume' {
+                        $null = $Requirements.Add($ProjPro_Rule)
+                    }
+                }
             }
         }
 
         switch -Regex ($DT.ProductIDs) {
             '2019' {
+                Write-Verbose "Adding rule to deployment type for $_"
                 $null = $Requirements.Add($2019_Rule)
                 break
             }
             'XVolume' {
+                Write-Verbose "Adding rule to deployment type for $_"
                 $null = $Requirements.Add($2016_Rule)
                 break
             }

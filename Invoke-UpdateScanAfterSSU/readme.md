@@ -1,1 +1,1 @@
-https://sccmf12twice.com/?p=11996&preview=true
+https://sccmf12twice.com/2019/05/the-cure-for-your-ssu-fever/

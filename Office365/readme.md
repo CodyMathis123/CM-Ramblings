@@ -39,9 +39,6 @@ The script has 11 parameters that you can see below in the help info from the sc
 .PARAMETER UpdateChannel<br>
 &nbsp;&nbsp;&nbsp;&nbsp;Provides the desired Update Channel for the deployment types. All of the XML will be updated with this value.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;'Semi-Annual', 'Semi-AnnualTargeted', 'Monthly', 'MonthlyTargeted'<br>
-.PARAMETER Version<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Provides the desired Version for the Office 365 installation. All of the XML will be updated with this value.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;By default, we attempt to gather the latest deployed patch version based on the Update Channel selected.<br>
 .PARAMETER AllowCdnFallback<br>
 &nbsp;&nbsp;&nbsp;&nbsp;A boolean value that will be set in the XML files. This will allow your clients to fallback to the Content Delivery Network (CDN)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;aka 'the cloud.'<br>

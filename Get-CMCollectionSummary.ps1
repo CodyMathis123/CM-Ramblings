@@ -176,6 +176,14 @@ order by
             Type         = [switch]
         }
         New-DynamicParam @newDynamicParamSplat
+
+        $newDynamicParamSplat = @{
+            DPDictionary = $Dictionary
+            Position     = $Position++
+            Name         = 'GenerateFilter'
+            Type         = [switch]
+        }
+        New-DynamicParam @newDynamicParamSplat
         #endregion Generate dynamic parameters
         $Dictionary
     }
@@ -581,11 +589,16 @@ FROM [dbo].[v_Collections] AS col
         else {
             Write-Verbose -Message "No WHERE Filter Generated"
         }
-        if (-not $GenerateWhereFilter) {
-            Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $CollectionSummaryQuery
-        }
-        else {
-            $WhereFilter
+        switch($true) {
+            $GenerateWhereFilter {
+                $WhereFilter
+            }
+            $GenerateFilter {
+                $CollectionSummaryQuery
+            }
+            default {
+                Invoke-DBAQuery -SqlInstance $SQLServer -Database $Database -Query $CollectionSummaryQuery
+            }
         }
     }
 }

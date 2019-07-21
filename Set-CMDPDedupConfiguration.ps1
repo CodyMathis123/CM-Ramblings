@@ -93,7 +93,7 @@ Function Write-CMLogEntry {
                 [System.IO.File]::Copy($LogFilePath, "$($Folder)\$($LogFileNameWithoutExt)_1.lo_", $true)
 
                 # Blank the main log
-                $StreamWriter = [System.IO.StreamWriter]::new($LogFilePath, $false)
+                $StreamWriter = New-Object -TypeName System.IO.StreamWriter -ArgumentList $LogFilePath, $false
                 $StreamWriter.Close()
             }
         }
@@ -118,7 +118,7 @@ Function Write-CMLogEntry {
     
         # Add value to log file
         try {
-            $StreamWriter = [System.IO.StreamWriter]::new($LogFilePath, 'Append')
+            $StreamWriter = New-Object -TypeName System.IO.StreamWriter -ArgumentList $LogFilePath, 'Append'
             $StreamWriter.WriteLine($LogText)
             $StreamWriter.Close()
         }
@@ -323,7 +323,7 @@ Function Write-CMLogEntry {
                 [System.IO.File]::Copy($LogFilePath, "$($Folder)\$($LogFileNameWithoutExt)_1.lo_", $true)
 
                 # Blank the main log
-                $StreamWriter = [System.IO.StreamWriter]::new($LogFilePath, $false)
+                $StreamWriter = New-Object -TypeName System.IO.StreamWriter -ArgumentList $LogFilePath, $false
                 $StreamWriter.Close()
             }
         }
@@ -348,7 +348,7 @@ Function Write-CMLogEntry {
     
         # Add value to log file
         try {
-            $StreamWriter = [System.IO.StreamWriter]::new($LogFilePath, 'Append')
+            $StreamWriter = New-Object -TypeName System.IO.StreamWriter -ArgumentList $LogFilePath, 'Append'
             $StreamWriter.WriteLine($LogText)
             $StreamWriter.Close()
         }

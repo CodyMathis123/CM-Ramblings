@@ -1,7 +1,7 @@
 #region Deduplication configuration detection/remediation
 #region variables
 # flip this boolean based on if this will be your detection or remediation script
-$Remediate = $true
+$Remediate = $false
 
 # Log related variables, boolean for enabling logs, filepath, and filename
 $Logging = $true
@@ -299,7 +299,7 @@ if ($null -ne $Dedup -or $Remediate) {
                             $true {
                                 Write-CMLogEntry -Value "Deduplication is not enabled on $DrivePath - attempting to enable" -Severity 2
                                 $Volume | Enable-DedupVolume -UsageType Default -ErrorAction Stop
-                                New-CMNLogEntry -enry "Deduplication enabled on $DrivePath succesfully" -Severity 2
+                                Write-CMLogEntry -Value "Deduplication enabled on $DrivePath succesfully" -Severity 2
                                 $DriveCompliance['Deduplication'] = $true
                                 Write-CMLogEntry -Value "Validating deduplication configuration for $DrivePath"
                                 $configureDedupExcludesSplat = @{

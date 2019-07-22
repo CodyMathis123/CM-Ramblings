@@ -11,7 +11,11 @@ $LogFile = 'Set-CMDPDedupConfiguration.log'
 # Sets the MinimumFileAgeDays setting for deduplication
 $MinimumFileAgeDays = 1
 
-# If you have additional folders that you would like to include for deduplication then provide them in the CSV named below. 
+<# 
+    If you have additional folders that you would like to include for deduplication then provide them in the CSV named below. 
+    The CSV should be located in the root of the drive.
+    Only include the folder names to include, and it should have a heading of 'Include'
+#>
 $AdditionalIncludes = 'Dedup-Includes.csv'
 #endregion variables
 
@@ -257,8 +261,18 @@ if ($null -ne $Dedup -or $Remediate) {
                     Write-CMLogEntry -Value "Adding $($SCCMContentLibFolderPath.FullName) to inclusion list for $DrivePath"
                     $Include[$SCCMContentLibFolderPath.FullName] = $true
                 }
+                $IncludeCSV = Join-Path -Path $DrivePath -ChildPath $AdditionalIncludes
+                if (Test-Path -Path $IncludeCSV) {
+                    Write-CMLogEntry -Value "CSV found for processing additional includes for deduplication - $IncludeCSV"
+                    $ExplicitIncludes = Import-Csv -Path $IncludeCSV
+                    foreach ($Inclusion in $ExplicitIncludes.Include) {
+                        $Inclusion = [string]::Format('{0}\{1}', $DrivePath, $Inclusion)
+                        Write-CMLogEntry -Value "$Inclusion added for processing"
+                        $Include[$Inclusion] = $true
+                    }
+                }
                 if ($Include -ne @{ }) {
-                    Write-CMLogEntry -Value "Found that DP/Content Library folders [$($Include.Keys -join '; ')] do exist - will process $DrivePath for deduplication"
+                    Write-CMLogEntry -Value "Marking folders [$($Include.Keys -join '; ')] for inclusion in dedplucation - will process $DrivePath"
                     $AllFolders = Get-ChildItem -Path $DrivePath -Directory
                     $Exclude = $AllFolders.FullName | Where-Object { $_ -notin $Include.Keys }
                     $Excludes = $Exclude -replace $DrivePath

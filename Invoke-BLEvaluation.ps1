@@ -45,7 +45,7 @@ function Invoke-BLEvaluation {
         $PropertyOptions = 'IsEnforced', 'IsMachineTarget', 'Name', 'PolicyType', 'Version'
     }
     process {
-        foreach ($Computer in $ComputerName) {
+        $Return = foreach ($Computer in $ComputerName) {
             $getWmiObjectSplat['ComputerName'] = $Computer
             foreach ($BLName in $BaselineName) {
                 #region Query WMI for Configuration Baselines based off DisplayName
@@ -66,7 +66,7 @@ function Invoke-BLEvaluation {
                 switch ($null -eq $Baselines) {
                     $false {
                         foreach ($BL in $Baselines) {
-                            #region generate a properly ordered list of existing arguments to pass to the TriggerEvaluation method. Order is important!
+                            #region generate a property ordered list of existing arguments to pass to the TriggerEvaluation method. Order is important!
                             $ValidParams = $BL.GetMethodParameters('TriggerEvaluation').Properties.Name
                             $compareObjectSplat = @{
                                 ReferenceObject  = $PropertyOptions
@@ -79,18 +79,52 @@ function Invoke-BLEvaluation {
                             $BaselineArguments = foreach ($Property in $Select) {
                                 $BL.$Property
                             }
-                            #endregion generate a properly ordered list of existing arguments to pass to the TriggerEvaluation method. Order is important!
+                            #endregion generate a property ordered list of existing arguments to pass to the TriggerEvaluation method. Order is important!
 
                             #region Trigger the Configuration Baseline to run
                             $invokeWmiMethodSplat['ComputerName'] = $Computer
                             $invokeWmiMethodSplat['ArgumentList'] = $BaselineArguments
                             Write-Verbose "Identified the Configuration Baseline [BaselineName='$($BL.DisplayName)'] on [ComputerName='$Computer'] will trigger via the 'TriggerEvaluation' WMI method"
-                            Invoke-WmiMethod @invokeWmiMethodSplat
+                            try {
+                                $Invocation = Invoke-WmiMethod @invokeWmiMethodSplat
+                                switch ($Invocation.ReturnValue) {
+                                    0 {
+                                        $Invoked = $true
+                                    }
+                                    default {
+                                        $Invoked = $false
+                                    }
+                                }    
+                            }
+                            catch {
+                                $Invoked = $false
+                            }
+
+                            #region convert LastEvalTime to local time zone DateTime object
+                            $LastEvalTimeUTC = [DateTime]::ParseExact((($BL.LastEvalTime).Split('+|-')[0]), 'yyyyMMddHHmmss.ffffff', [System.Globalization.CultureInfo]::InvariantCulture)
+                            $TimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById([system.timezone]::CurrentTimeZone.StandardName)
+                            $LastEvalTime = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
+                            #endregion convert LastEvalTime to local time zone DateTime object
+
+                            [pscustomobject] @{
+                                ComputerName         = $Computer
+                                Baseline             = $BL.DisplayName
+                                Invoked              = $Invoked
+                                LastComplianceStatus = $BL.LastComplianceStatus
+                                LastEvalTime         = $LastEvalTime
+                            }
                             #endregion Trigger the Configuration Baseline to run
                         }
                     }
                     $true {
                         Write-Warning "Failed to identify any Configuration Baselines on [ComputerName='$Computer'] with [Query=`"$BLQuery`"]"
+                        [pscustomobject] @{
+                            ComputerName         = $Computer
+                            Baseline             = $BL.DisplayName
+                            Invoked              = 'Not Found'
+                            LastComplianceStatus = $null
+                            LastEvalTime         = $null
+                        }
                     }
                 }
                 #endregion Based on results of WMI Query, identify arguments and invoke TriggerEvaluation
@@ -98,6 +132,6 @@ function Invoke-BLEvaluation {
         }
     }
     end {
-
+        return $Return
     }
 }

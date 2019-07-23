@@ -100,17 +100,28 @@ function Invoke-BLEvaluation {
                                 $Invoked = $false
                             }
 
+                            #region convert LastComplianceStatus to readable value
+                            $LastComplianceStatus = switch ($BL.LastComplianceStatus) {
+                                1 {
+                                    'Compliant'
+                                }
+                                0 {
+                                    'Non-Compliant'
+                                }
+                            }
+                            #endregion convert LastComplianceStatus to readable value
+
                             #region convert LastEvalTime to local time zone DateTime object
                             $LastEvalTimeUTC = [DateTime]::ParseExact((($BL.LastEvalTime).Split('+|-')[0]), 'yyyyMMddHHmmss.ffffff', [System.Globalization.CultureInfo]::InvariantCulture)
                             $TimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById([system.timezone]::CurrentTimeZone.StandardName)
                             $LastEvalTime = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
                             #endregion convert LastEvalTime to local time zone DateTime object
-
+                            
                             [pscustomobject] @{
                                 ComputerName         = $Computer
                                 Baseline             = $BL.DisplayName
                                 Invoked              = $Invoked
-                                LastComplianceStatus = $BL.LastComplianceStatus
+                                LastComplianceStatus = $LastComplianceStatus
                                 LastEvalTime         = $LastEvalTime
                             }
                             #endregion Trigger the Configuration Baseline to run

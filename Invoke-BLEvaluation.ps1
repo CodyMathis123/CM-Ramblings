@@ -7,11 +7,14 @@ function Invoke-BLEvaluation {
         [parameter(Mandatory = $false)]
         [pscredential]$Credential
     )
-    $getWmiObjectSplat = @{
-        Namespace = 'root\ccm\dcm'
+    switch ($PSBoundParameters.ContainsKey('ComputerName')) {
+        $false {
+            $ComputerName = $env:COMPUTERNAME
+        }
     }
-    if ($PSBoundParameters.ContainsKey('ComputerName')) {
-        $getWmiObjectSplat.Add('ComputerName', $ComputerName)
+    $getWmiObjectSplat = @{
+        Namespace    = 'root\ccm\dcm'
+        ComputerName = $ComputerName
     }
     if ($PSBoundParameters.ContainsKey('Credential')) {
         $getWmiObjectSplat.Add('Credential', $Credential)
@@ -35,19 +38,12 @@ function Invoke-BLEvaluation {
             $BL.$Property
         }
         $invokeWmiMethodSplat = @{
+            ComputerName = $ComputerName
             Namespace    = 'root\ccm\dcm'
             Class        = 'SMS_DesiredConfiguration'
             ErrorAction  = 'Stop'
             Name         = 'TriggerEvaluation'
             ArgumentList = $BaselineArguments
-        }
-        switch ($PSBoundParameters.ContainsKey('ComputerName')) {
-            $true {
-                $invokeWmiMethodSplat.Add('ComputerName', $ComputerName)
-            }
-            $false {
-                $invokeWmiMethodSplat.Add('ComputerName', $env:COMPUTERNAME)
-            }
         }
         if ($PSBoundParameters.ContainsKey('Credential')) {
             $invokeWmiMethodSplat.Add('Credential', $Credential)

@@ -29,7 +29,7 @@ function Invoke-BLEvaluation {
     $Baselines = Get-WmiObject @getWmiObjectSplat
     $PropertyOptions = 'IsEnforced', 'IsMachineTarget', 'Name', 'PolicyType', 'Version'
     foreach ($BL in $Baselines) {
-        $ValidParams = $BL.GetMethodParameters('TriggerEvaluation') | Select-Object -Property * | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+        $ValidParams = $BL.GetMethodParameters('TriggerEvaluation').Properties.Name
         $Select = Compare-Object -ReferenceObject $PropertyOptions -DifferenceObject $ValidParams -IncludeEqual -ExcludeDifferent -PassThru
         $BaselineArguments = foreach ($Property in $Select) {
             $BL.$Property

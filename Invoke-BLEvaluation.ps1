@@ -1,4 +1,44 @@
 function Invoke-BLEvaluation {
+    <#
+.SYNOPSIS
+    Invoke SCCM Configuration Baselines on the specified computers
+.DESCRIPTION
+    This function will allow you to provide an array of computer names, and configuration baseline names which will be invoked. 
+    If you do not specify a baseline name, then ALL baselines on the machine will be invoked. A [PSCustomObject] is return that 
+    outlines the results, including the last time the baseline was ran, and if the previous run returned compliant or non-compliant.
+.PARAMETER ComputerName
+    Provides computer names to invoke the configuration baselines on. 
+.PARAMETER BaselineName
+    Provides the configuration baseline names that you wish to invoke. 
+.PARAMETER Credential
+    Provides optional credentials to use for the WMI cmdlets.
+.EXAMPLE
+    C:\PS> Invoke-BLEvaluation.ps1 -ComputerName 'Workstation1234','Workstation4321' -BaselineName 'Check Computer Compliance','Double Check Computer Compliance'
+        Invoke the two baselines on the computers specified. This demonstrates that both ComputerName and BaselineName accept string arrays
+
+.NOTES
+    FileName:    Invoke-BLEvaluation.ps1
+    Author:      Cody Mathis
+    Contact:     @CodyMathis123
+    Created:     2019-07-24
+    Updated:     2019-07-24
+
+    It is important to note that if a configuration baseline has user settings, the only way to invoke it is if the user is logged in, and you run this script
+    with those credentials. An example would be if Workstation1234 has user Jim1234 logged in, with a configuration baseline 'FixJimsStuff' that has user settings,
+    
+    This command would successfully invoke FixJimsStuff
+    Invoke-BLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff' -Credential $JimsCreds
+    
+    This command would not find the baseline FixJimsStuff, and be unable to invoke it
+    Invoke-BLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff'
+
+    You could remotely invoke that baseline AS Jim1234, with either a runas on PowerShell, or providing Jim's credentials to the function's -Credential param. 
+    If you try to invoke this same baseline without Jim's credentials being used in some way you will see that the baseline is not found.  
+
+    Outside of that, it will dynamically generate the arguments to pass to the TriggerEvaluation method. I found a handful of examples on the internet for 
+    invoking SCCM Configuration Baselines, and there were always comments about certain scenarios not working. This implementation has been consistent in 
+    invoking Configuration Baselines, including those with user settings, as long as the context is correct. 
+#>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $false)]

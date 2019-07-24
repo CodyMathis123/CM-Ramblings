@@ -4,7 +4,7 @@ function Invoke-CMBLEvaluation {
     Invoke SCCM Configuration Baselines on the specified computers
 .DESCRIPTION
     This function will allow you to provide an array of computer names, and configuration baseline names which will be invoked.
-    If you do not specify a baseline name, then ALL baselines on the machine will be invoked. A [PSCustomObject] is return that
+    If you do not specify a baseline name, then ALL baselines on the machine will be invoked. A [PSCustomObject] is returned that
     outlines the results, including the last time the baseline was ran, and if the previous run returned compliant or non-compliant.
 .PARAMETER ComputerName
     Provides computer names to invoke the configuration baselines on.

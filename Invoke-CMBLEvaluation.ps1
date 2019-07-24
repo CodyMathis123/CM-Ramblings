@@ -1,4 +1,4 @@
-function Invoke-BLEvaluation {
+function Invoke-CMBLEvaluation {
     <#
 .SYNOPSIS
     Invoke SCCM Configuration Baselines on the specified computers
@@ -13,16 +13,16 @@ function Invoke-BLEvaluation {
 .PARAMETER Credential
     Provides optional credentials to use for the WMI cmdlets.
 .EXAMPLE
-    C:\PS> Invoke-BLEvaluation
+    C:\PS> Invoke-CMBLEvaluation
         Invoke all baselines identified in WMI on the local computer.
 .EXAMPLE
-    C:\PS> Invoke-BLEvaluation -ComputerName 'Workstation1234','Workstation4321' -BaselineName 'Check Computer Compliance','Double Check Computer Compliance'
+    C:\PS> Invoke-CMBLEvaluation -ComputerName 'Workstation1234','Workstation4321' -BaselineName 'Check Computer Compliance','Double Check Computer Compliance'
         Invoke the two baselines on the computers specified. This demonstrates that both ComputerName and BaselineName accept string arrays.
 .EXAMPLE
-    C:\PS> Invoke-BLEvaluation -ComputerName 'Workstation1234','Workstation4321'
+    C:\PS> Invoke-CMBLEvaluation -ComputerName 'Workstation1234','Workstation4321'
         Invoke all baselines identified in WMI for the computers specified. 
 .NOTES
-    FileName:    Invoke-BLEvaluation.ps1
+    FileName:    Invoke-CMBLEvaluation.ps1
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     2019-07-24
@@ -32,10 +32,10 @@ function Invoke-BLEvaluation {
     with those credentials. An example would be if Workstation1234 has user Jim1234 logged in, with a configuration baseline 'FixJimsStuff' that has user settings,
 
     This command would successfully invoke FixJimsStuff
-    Invoke-BLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff' -Credential $JimsCreds
+    Invoke-CMBLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff' -Credential $JimsCreds
 
     This command would not find the baseline FixJimsStuff, and be unable to invoke it
-    Invoke-BLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff'
+    Invoke-CMBLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff'
 
     You could remotely invoke that baseline AS Jim1234, with either a runas on PowerShell, or providing Jim's credentials to the function's -Credential param.
     If you try to invoke this same baseline without Jim's credentials being used in some way you will see that the baseline is not found.

@@ -2,7 +2,7 @@ function Invoke-BLEvaluation {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $false)]
-        [string[]]$ComputerName,
+        [string[]]$ComputerName = $env:COMPUTERNAME,
         [Parameter(Mandatory = $false)]
         [string[]]$BaselineName,
         [parameter(Mandatory = $false)]
@@ -24,11 +24,6 @@ function Invoke-BLEvaluation {
             $true {
                 $getWmiObjectSplat.Add('Credential', $Credential)
                 $invokeWmiMethodSplat.Add('Credential', $Credential)
-            }
-        }
-        switch ($PSBoundParameters.ContainsKey('ComputerName')) {
-            $false {
-                $ComputerName = $env:COMPUTERNAME
             }
         }
         switch ($PSBoundParameters.ContainsKey('BaselineName')) {
@@ -131,7 +126,7 @@ function Invoke-BLEvaluation {
                         Write-Warning "Failed to identify any Configuration Baselines on [ComputerName='$Computer'] with [Query=`"$BLQuery`"]"
                         [pscustomobject] @{
                             ComputerName         = $Computer
-                            Baseline             = $BL.DisplayName
+                            Baseline             = $BLName
                             Invoked              = 'Not Found'
                             LastComplianceStatus = $null
                             LastEvalTime         = $null

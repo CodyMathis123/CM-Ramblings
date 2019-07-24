@@ -152,9 +152,14 @@ function Invoke-CMBLEvaluation {
                             #endregion convert LastComplianceStatus to readable value
 
                             #region convert LastEvalTime to local time zone DateTime object
-                            $LastEvalTimeUTC = [DateTime]::ParseExact((($BL.LastEvalTime).Split('+|-')[0]), 'yyyyMMddHHmmss.ffffff', [System.Globalization.CultureInfo]::InvariantCulture)
-                            $TimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById([system.timezone]::CurrentTimeZone.StandardName)
-                            $LastEvalTime = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
+                            if ($null -ne $BL.LastEvalTime) {
+                                $LastEvalTimeUTC = [DateTime]::ParseExact((($BL.LastEvalTime).Split('+|-')[0]), 'yyyyMMddHHmmss.ffffff', [System.Globalization.CultureInfo]::InvariantCulture)
+                                $TimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById([system.timezone]::CurrentTimeZone.StandardName)
+                                $LastEvalTime = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
+                            }
+                            else {
+                                $LastEvalTime = 'No Data'
+                            }
                             #endregion convert LastEvalTime to local time zone DateTime object
 
                             [pscustomobject] @{

@@ -1,3 +1,5 @@
+https://sccmf12twice.com/2019/05/getting-from-msi-to-c2r/ 
+
 End Product - One application with all possible deployment types that will dynamically install the 'new' version of Office / Project / Visio as needed based on your licensing selection. 
 
 

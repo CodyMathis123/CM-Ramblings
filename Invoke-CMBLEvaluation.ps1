@@ -26,7 +26,7 @@ function Invoke-CMBLEvaluation {
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     2019-07-24
-    Updated:     2019-07-24
+    Updated:     2019-08-08
 
     It is important to note that if a configuration baseline has user settings, the only way to invoke it is if the user is logged in, and you run this script
     with those credentials. An example would be if Workstation1234 has user Jim1234 logged in, with a configuration baseline 'FixJimsStuff' that has user settings,

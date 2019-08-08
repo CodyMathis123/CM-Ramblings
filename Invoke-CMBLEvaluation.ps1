@@ -46,7 +46,8 @@ function Invoke-CMBLEvaluation {
 #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Computer', 'PSComputerName', 'IPAddress')]
         [string[]]$ComputerName = $env:COMPUTERNAME,
         [Parameter(Mandatory = $false)]
         [string[]]$BaselineName,
@@ -153,9 +154,15 @@ function Invoke-CMBLEvaluation {
 
                             #region convert LastEvalTime to local time zone DateTime object
                             if ($null -ne $BL.LastEvalTime) {
-                                $LastEvalTimeUTC = [DateTime]::ParseExact((($BL.LastEvalTime).Split('+|-')[0]), 'yyyyMMddHHmmss.ffffff', [System.Globalization.CultureInfo]::InvariantCulture)
-                                $TimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById([system.timezone]::CurrentTimeZone.StandardName)
-                                $LastEvalTime = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
+                                try {
+                                    $LastEvalTimeUTC = [DateTime]::ParseExact((($BL.LastEvalTime).Split('+|-')[0]), 'yyyyMMddHHmmss.ffffff', [System.Globalization.CultureInfo]::InvariantCulture)
+                                    $TimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById([system.timezone]::CurrentTimeZone.StandardName)
+                                    $LastEvalTime = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
+                                }
+                                catch {
+                                    Write-Verbose "[BL.LastEvalTime = '$($BL.LastEvalTime)'] [LastEvalTimeUTC = '$LastEvalTimeUTC'] [TimeZone = '$TimeZone'] [LastEvalTime = '$LastEvalTime']"
+                                    $LastEvalTime = 'No Data'
+                                }
                             }
                             else {
                                 $LastEvalTime = 'No Data'

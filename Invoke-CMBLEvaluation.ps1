@@ -100,7 +100,13 @@ function Invoke-CMBLEvaluation {
                 }
                 Write-Verbose "Checking for Configuration Baselines on [ComputerName='$Computer'] with [Query=`"$BLQuery`"]"
                 $getWmiObjectSplat['Query'] = $BLQuery
-                $Baselines = Get-WmiObject @getWmiObjectSplat
+                $getWmiObjectSplat['ErrorAction'] = "Stop"
+                try {
+                    $Baselines = Get-WmiObject @getWmiObjectSplat
+                }
+                catch {
+                    return Write-Warning -Message ("{0}: {1}" -f $Computer, $_.Exception.Message)
+                }
                 #endregion Query WMI for Configuration Baselines based off DisplayName
 
                 #region Based on results of WMI Query, identify arguments and invoke TriggerEvaluation
@@ -125,6 +131,7 @@ function Invoke-CMBLEvaluation {
                             #region Trigger the Configuration Baseline to run
                             $invokeWmiMethodSplat['ComputerName'] = $Computer
                             $invokeWmiMethodSplat['ArgumentList'] = $BaselineArguments
+                            $invokeWmiMethodSplat['ErrorAction'] = "Stop"
                             Write-Verbose "Identified the Configuration Baseline [BaselineName='$($BL.DisplayName)'] on [ComputerName='$Computer'] will trigger via the 'TriggerEvaluation' WMI method"
                             try {
                                 $Invocation = Invoke-WmiMethod @invokeWmiMethodSplat

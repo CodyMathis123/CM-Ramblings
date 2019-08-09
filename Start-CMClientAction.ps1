@@ -31,7 +31,7 @@ function Start-CMClientAction {
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     11-29-2018
-    Updated:     03-09-2019
+    Updated:     08-109-2019
 #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param
@@ -124,6 +124,17 @@ function Start-CMClientAction {
                         Write-Error -Message "Access denied to $Computer" -Category AuthenticationError -Exception $_.Exception
                         $MustExit = $true
                     }
+                    catch [System.Runtime.InteropServices.COMException] {
+                        if ($_.Exception.ErrorCode -eq 0x800706BA) {
+                            # This is instead of the "RPC Server Unavailable" error
+                            Write-Warning -Message "The RPC Server is Unavailable for $Computer. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge $Timeout minutes] Error: $($_.Exception.Message)"
+                            $MustExit = $false
+                        }
+                        else {
+                            $_
+                            $MustExit = $true
+                        }
+                    }        
                     catch {
                         Write-Warning "Failed to invoke the $Option cycle via WMI. Will retry every 10 seconds until [StopWatch $($StopWatch.Elapsed) -ge $Timeout minutes] Error: $($_.Exception.Message)"
                         Start-Sleep -Seconds 10
@@ -134,8 +145,8 @@ function Start-CMClientAction {
                     Write-Verbose "Successfully invoked the $Option Cycle on $Computer via the 'TriggerSchedule' WMI method"
                     Start-Sleep -Seconds $Delay
                 }
-                elseif ($StopWatch.Elapsed -ge $TimeSpan) {
-                    Write-Error "Failed to invoke $Option cycle via WMI after $Timeout minutes of retrrying."
+                elseif ($StopWatch.Elapsed -ge $TimeSpan -or $MustExit) {
+                    Write-Error "Failed to invoke $Option cycle via WMI after $Timeout minutes of retrying."
                 }
                 $StopWatch.Reset()    
             }

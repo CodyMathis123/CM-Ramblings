@@ -131,17 +131,15 @@ function Get-CMClientMaintenanceWindow {
                 $ErrorMessage = $_.Exception.Message
                 Write-Error $ErrorMessage
             }
-            finally {
-                if ($PSDefaultParameterValues.ContainsKey('Get-WmiObject:ComputerName')) {
-                    $PSDefaultParameterValues.Remove('Get-WmiObject:ComputerName')
-                }
-                if ($PSDefaultParameterValues.ContainsKey('Get-WmiObject:Credential')) {
-                    $PSDefaultParameterValues.Remove('Get-WmiObject:Credential')
-                }
-            }
         }
     }
     end { 
+        if ($PSDefaultParameterValues.ContainsKey('Get-WmiObject:ComputerName')) {
+            $PSDefaultParameterValues.Remove('Get-WmiObject:ComputerName')
+        }
+        if ($PSDefaultParameterValues.ContainsKey('Get-WmiObject:Credential')) {
+            $PSDefaultParameterValues.Remove('Get-WmiObject:Credential')
+        }
         return $ReturnMW
     }
 }

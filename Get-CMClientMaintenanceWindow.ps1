@@ -66,7 +66,7 @@ function Get-CMClientMaintenanceWindow {
 
         #region define the PSDefaultParameterValues
         if ($PSBoundParameters.ContainsKey('Credential')) {
-            $PSDefaultParameterValues.Add('Get-WmiObject:Credential', $Credential)
+            $PSDefaultParameterValues['Get-WmiObject:Credential'] = $Credential
         }
         #endregion define the PSDefaultParameterValues
 
@@ -77,7 +77,7 @@ function Get-CMClientMaintenanceWindow {
         foreach ($Computer in $ComputerName) {
             try {
                 $PSDefaultParameterValues['Get-WmiObject:ComputerName'] = $Computer
-                
+
                 if (Test-Connection -ComputerName $Computer -Count 2 -Quiet) {
                     $TimeZone = Get-WmiObject -Class Win32_TimeZone -Property Caption | Select-Object -ExpandProperty Caption
 
@@ -131,9 +131,17 @@ function Get-CMClientMaintenanceWindow {
                 $ErrorMessage = $_.Exception.Message
                 Write-Error $ErrorMessage
             }
+            finally {
+                if ($PSDefaultParameterValues.ContainsKey('Get-WmiObject:ComputerName')) {
+                    $PSDefaultParameterValues.Remove('Get-WmiObject:ComputerName')
+                }
+                if ($PSDefaultParameterValues.ContainsKey('Get-WmiObject:Credential')) {
+                    $PSDefaultParameterValues.Remove('Get-WmiObject:Credential')
+                }
+            }
         }
     }
-    end {
+    end { 
         return $ReturnMW
     }
 }

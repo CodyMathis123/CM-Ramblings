@@ -8,6 +8,7 @@
         For the 'GenerateWorkload' ParameterSet you can input a string array of the workloads you'd like and it will return the translated integer equivalent.
 .PARAMETER DesiredWorkload
     Specify the workloads you'd like to generate a translated integer for. The options are are below. It will be translated using a bitwise and operator.
+        'Client Apps',    
         'Compliance policies',
         'Device Configuration',
         'Endpoint Protection',
@@ -37,12 +38,14 @@
     Version History:
     1.0.0 - (1/28/2019) Initial script creation
     1.0.1 - (1/29/2019) Added proper help and commenting and specified OutputType
+    1.0.2 - (8/21/2019) Update workloads for 1906
 #>
 [OutputType([int], ParameterSetName = 'GenerateWorkload')]
 [OutputType([string[]], ParameterSetName = 'TranslateWorkload')]
 param(
     [Parameter(Mandatory = $True, ParameterSetName = 'GenerateWorkload')]
-    [ValidateSet('Compliance policies',
+    [ValidateSet('Client Apps',
+        'Compliance policies',
         'Device Configuration',
         'Endpoint Protection',
         'Office Click-To-Run apps',
@@ -60,11 +63,13 @@ param(
 switch ($PSCmdlet.ParameterSetName) {
     'GenerateWorkload' {
         $Workloads = @{
-            "Compliance policies"      = 3;
+            "No Workloads"             = 1;
+            "Compliance Policies"      = 3;
             "Resource access policies" = 5;
+            "Device Configuration"     = 9;
             "Windows Updates Policies" = 17;
             "Endpoint Protection"      = 33;
-            "Device Configuration"     = 45;
+            "Client Apps"              = 65;
             "Office Click-to-Run apps" = 129;
         }
         # Creating an arraylist and adding all the integer values for our workloads to the arraylist.
@@ -83,11 +88,13 @@ switch ($PSCmdlet.ParameterSetName) {
     }
     'TranslateWorkload' {
         $Workloads = @{
+            1   = "No Workloads";
             3   = "Compliance policies";
             5   = "Resource access policies"
+            9   = "Device Configuration"
             17  = "Windows Updates Policies";
             33  = "Endpoint Protection"
-            45  = "Device Configuration"
+            65  = "Client Apps";
             129 = "Office Click-to-Run apps"
         }
 

@@ -33,7 +33,7 @@
     Author:   Cody Mathis
     Contact:  @CodyMathis123
     Created:  1/28/2019
-    Updated:  1/29/2019
+    Updated:  8/21/2019
 
     Version History:
     1.0.0 - (1/28/2019) Initial script creation

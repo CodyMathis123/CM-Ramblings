@@ -63,7 +63,6 @@ param(
 switch ($PSCmdlet.ParameterSetName) {
     'GenerateWorkload' {
         $Workloads = @{
-            "No Workloads"             = 1;
             "Compliance Policies"      = 3;
             "Resource access policies" = 5;
             "Device Configuration"     = 9;
@@ -88,7 +87,6 @@ switch ($PSCmdlet.ParameterSetName) {
     }
     'TranslateWorkload' {
         $Workloads = @{
-            1   = "No Workloads";
             3   = "Compliance policies";
             5   = "Resource access policies"
             9   = "Device Configuration"

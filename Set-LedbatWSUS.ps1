@@ -1,6 +1,7 @@
 #region detection/remediation
 #region define variables
 $Remediate = $false
+$Logging = $true
 $LogPath = "$env:SystemDrive\temp"
 $LogFile = 'Set-LedbatWSUS.log'
 $Component = switch ($Remediate) {

@@ -215,7 +215,5 @@ if ($LogPath -and $CCMDir) {
     $null = Start-Process -FilePath $CMHTTPSReadiness.FullName -WindowStyle Hidden -Wait
     $Log = Get-CMLogFile -LogFilePath $LogFilePath
     $CompliantLogLine = $Log | Where-Object { $_.Message -match 'Client is ready for HTTPS communication.' -and $_.TimeStamp -ge $StartedAt }
-    if ($null -ne $CompliantLogLine) {
-        $true
-    }
+    $null -ne $CompliantLogLine
 }

@@ -217,3 +217,6 @@ if ($LogPath -and $CCMDir) {
     $CompliantLogLine = $Log | Where-Object { $_.Message -match 'Client is ready for HTTPS communication.' -and $_.TimeStamp -ge $StartedAt }
     $null -ne $CompliantLogLine
 }
+else {
+    $false
+}

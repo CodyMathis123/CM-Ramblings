@@ -17,8 +17,8 @@ Function Get-CMLogFile {
         [pscustomobject]
     .NOTES
         I've done my best to test this against various SCCM log files. They are all generally 'formatted' the same, but do have some
-        variance. I had to also balance speed and parsing. In particular, date parsing was problematic around MM vs M and dd vs d.
-        The method of splitting the $LogLineArray on multiple fields also takes slightly longer than some alternatives.
+        variance. I had to also balance speed and parsing. The method of splitting the $LogLineArray on multiple fields also takes 
+        slightly longer than some alternatives.
 
         With that said, it can still parse a typical SCCM log VERY quickly. Smaller logs are parsed in milliseconds in my testing.
         Rolled over logs that are 5mb can be parsed in a couple seconds or less.
@@ -73,10 +73,10 @@ Function Get-CMLogFile {
                             $LogLineArray = $PSItem -split "]LOG]!><"
 
                             # Strip the log message out of our first array index
-                            $Message = $LogLineArray[0].Trim()
+                            $Message = $LogLineArray[0]
 
                             # Split LogLineArray into a a sub array based on double quotes to pull log line information
-                            $LogLineSubArray = $LogLineArray[1] -split 'time="' -split '" date="' -split '" component="' -split '" context="' -split '" type="' -split '" thread="' -split '" file="'
+                            $LogLineSubArray = $LogLineArray[1] -split 'time="|" date="|" component="|" context="|" type="|" thread="|" file="'
 
                             $LogLine = @{ }
                             # Rebuild the LogLine into a hash table
@@ -89,22 +89,8 @@ Function Get-CMLogFile {
                             $DateString = $LogLineSubArray[2]
                             $DateStringArray = $DateString -split "-"
 
-                            $MonthParser = switch ($DateStringArray[0].Length) {
-                                1 {
-                                    'M'
-                                }
-                                2 {
-                                    'MM'
-                                }
-                            }
-                            $DayParser = switch ($DateStringArray[1].Length) {
-                                1 {
-                                    'd'
-                                }
-                                2 {
-                                    'dd'
-                                }
-                            }
+                            $MonthParser = $DateStringArray[0] -replace '\d', 'M'
+                            $DayParser = $DateStringArray[1] -replace '\d', 'd'
 
                             $DateTimeFormat = [string]::Format('{0}-{1}-yyyyHH:mm:ss.fff', $MonthParser, $DayParser)
                             $TimeString = ($LogLineSubArray[1]).Split("+|-")[0].ToString().Substring(0, 12)
@@ -147,7 +133,7 @@ Function Get-CMLogFile {
                                 default {
                                     $LogLine = @{ }
                                     # Rebuild the LogLine into a hash table
-                                    $LogLine.Message = $Message.Trim()
+                                    $LogLine.Message = $Message
                                     $LogLine.Type = [Severity]0
                                     $LogLine.Component = $LogLineSubArray[0].Trim()
                                     $LogLine.Thread = ($LogLineSubArray[2] -split " ")[0].Substring(7)
@@ -158,22 +144,9 @@ Function Get-CMLogFile {
                                     $DateString = $DateTimeStringArray[0]
                                     $DateStringArray = $DateString -split "-"
 
-                                    $MonthParser = switch ($DateStringArray[0].Length) {
-                                        1 {
-                                            'M'
-                                        }
-                                        2 {
-                                            'MM'
-                                        }
-                                    }
-                                    $DayParser = switch ($DateStringArray[1].Length) {
-                                        1 {
-                                            'd'
-                                        }
-                                        2 {
-                                            'dd'
-                                        }
-                                    }
+                                    $MonthParser = $DateStringArray[0] -replace '\d', 'M'
+                                    $DayParser = $DateStringArray[1] -replace '\d', 'd'
+
                                     $DateTimeFormat = [string]::Format('{0}-{1}-yyyy HH:mm:ss.fff', $MonthParser, $DayParser)
                                     $TimeString = $DateTimeStringArray[1].ToString().Substring(0, 12)
                                     $DateTimeString = [string]::Format('{0} {1}', $DateString, $TimeString)

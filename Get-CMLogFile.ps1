@@ -17,8 +17,7 @@ Function Get-CMLogFile {
         [pscustomobject]
     .NOTES
         I've done my best to test this against various SCCM log files. They are all generally 'formatted' the same, but do have some
-        variance. I had to also balance speed and parsing. The method of splitting the $LogLineArray on multiple fields also takes 
-        slightly longer than some alternatives.
+        variance. I had to also balance speed and parsing.
 
         With that said, it can still parse a typical SCCM log VERY quickly. Smaller logs are parsed in milliseconds in my testing.
         Rolled over logs that are 5mb can be parsed in a couple seconds or less.
@@ -27,7 +26,7 @@ Function Get-CMLogFile {
             Author:   Cody Mathis
             Contact:  @CodyMathis123
             Created:  9/19/2019
-            Updated:  9/19/2019
+            Updated:  9/20/2019
     #>
     param (
         [Parameter(Mandatory = $true)]
@@ -76,17 +75,17 @@ Function Get-CMLogFile {
                             $Message = $LogLineArray[0]
 
                             # Split LogLineArray into a a sub array based on double quotes to pull log line information
-                            $LogLineSubArray = $LogLineArray[1] -split 'time="|" date="|" component="|" context="|" type="|" thread="|" file="'
+                            $LogLineSubArray = $LogLineArray[1] -split '"'
 
                             $LogLine = @{ }
                             # Rebuild the LogLine into a hash table
                             $LogLine.Message = $Message
-                            $LogLine.Type = [Severity]$LogLineSubArray[5]
-                            $LogLine.Component = $LogLineSubArray[3]
-                            $LogLine.Thread = $LogLineSubArray[6]
+                            $LogLine.Type = [Severity]$LogLineSubArray[9]
+                            $LogLine.Component = $LogLineSubArray[5]
+                            $LogLine.Thread = $LogLineSubArray[11]
 
                             #region determine timestamp for log line
-                            $DateString = $LogLineSubArray[2]
+                            $DateString = $LogLineSubArray[3]
                             $DateStringArray = $DateString -split "-"
 
                             $MonthParser = $DateStringArray[0] -replace '\d', 'M'

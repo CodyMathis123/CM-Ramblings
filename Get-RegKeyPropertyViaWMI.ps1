@@ -1,4 +1,30 @@
 function Get-RegKeyPropertyViaWMI {
+    <#
+    .SYNOPSIS
+        Return registry properties using the WMI StdRegProv
+
+    .DESCRIPTION
+        Relies on remote WMI and StdRegProv to allow for returning Registry Properties under a key,
+        and you are able to provide pscredential
+        
+    .PARAMETER RegRoot
+        The root key you want to search under
+        ('HKEY_LOCAL_MACHINE', 'HKEY_USERS', 'HKEY_CURRENT_CONFIG', 'HKEY_DYN_DATA', 'HKEY_CLASSES_ROOT', 'HKEY_CURRENT_USER')
+    .PARAMETER Key
+        The key you want to return properties of. (ie. SOFTWARE\Microsoft\SMS\Client\Configuration\Client Properties)
+    .PARAMETER Property
+        The property name(s) you want to return the value of. This is an optional string array [string[]] and if it is not provided, all properties
+        under the key will be returned
+    .EXAMPLE
+        PS> Get-RegKeyPropertyViaWMI -RegRoot HKEY_LOCAL_MACHINE -Key 'SOFTWARE\Microsoft\SMS\Client\Client Components\Remote Control' -Property "Allow Remote Control of an unattended computer"
+        Name                           Value
+        ----                           -----
+        Computer123                 @{Allow Remote Control of an unattended computer=1}
+    .OUTPUTS
+        [hashtable]
+    .NOTES
+        Returns a hashtable with the computername as the key, and the value is a pscustomobject of the properties
+#>
     param (
         [parameter(Mandatory = $true)]
         [ValidateSet('HKEY_LOCAL_MACHINE', 'HKEY_USERS', 'HKEY_CURRENT_CONFIG', 'HKEY_DYN_DATA', 'HKEY_CLASSES_ROOT', 'HKEY_CURRENT_USER')]
@@ -12,7 +38,6 @@ function Get-RegKeyPropertyViaWMI {
         [parameter(Mandatory = $false)]
         [PSCredential]$Credential
     )
-
     begin {
         #region create hash tables for translating values
         $RootKey = @{

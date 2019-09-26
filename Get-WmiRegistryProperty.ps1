@@ -10,18 +10,23 @@ function Get-WmiRegistryProperty {
     .PARAMETER RegRoot
         The root key you want to search under
         ('HKEY_LOCAL_MACHINE', 'HKEY_USERS', 'HKEY_CURRENT_CONFIG', 'HKEY_DYN_DATA', 'HKEY_CLASSES_ROOT', 'HKEY_CURRENT_USER')
+        
     .PARAMETER Key
         The key you want to return properties of. (ie. SOFTWARE\Microsoft\SMS\Client\Configuration\Client Properties)
+
     .PARAMETER Property
         The property name(s) you want to return the value of. This is an optional string array [string[]] and if it is not provided, all properties
         under the key will be returned
+
     .EXAMPLE
         PS> Get-WmiRegistryProperty -RegRoot HKEY_LOCAL_MACHINE -Key 'SOFTWARE\Microsoft\SMS\Client\Client Components\Remote Control' -Property "Allow Remote Control of an unattended computer"
         Name                           Value
         ----                           -----
         Computer123                 @{Allow Remote Control of an unattended computer=1}
+
     .OUTPUTS
         [hashtable]
+
     .NOTES
         Returns a hashtable with the computername as the key, and the value is a pscustomobject of the properties
 #>

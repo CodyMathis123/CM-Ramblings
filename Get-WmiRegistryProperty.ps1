@@ -21,7 +21,7 @@ function Get-WmiRegistryProperty {
     .EXAMPLE
         PS> Get-WmiRegistryProperty -RegRoot HKEY_LOCAL_MACHINE -Key 'SOFTWARE\Microsoft\SMS\Client\Client Components\Remote Control' -Property "Allow Remote Control of an unattended computer"
         Name                           Value
-        ----                           -----s
+        ----                           -----
         Computer123                 @{Allow Remote Control of an unattended computer=1}
 
     .OUTPUTS

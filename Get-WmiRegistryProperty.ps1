@@ -39,7 +39,7 @@ function Get-WmiRegistryProperty {
         [parameter(Mandatory = $false)]
         [string[]]$Property,
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
-        [Alias('Computer', 'PSComputerName', 'IPAddress', 'ServerName', 'HostName')]
+        [Alias('Computer', 'PSComputerName', 'IPAddress', 'ServerName', 'HostName', 'DNSHostName')]
         [string[]]$ComputerName = $env:COMPUTERNAME,
         [parameter(Mandatory = $false)]
         [PSCredential]$Credential

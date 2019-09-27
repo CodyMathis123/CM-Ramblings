@@ -25,7 +25,7 @@ function Get-WmiRegistryProperty {
         Computer123                 @{Allow Remote Control of an unattended computer=1}
 
     .OUTPUTS
-        [hashtable]
+        [System.Collections.Hashtable]
 
     .NOTES
         Returns a hashtable with the computername as the key, and the value is a pscustomobject of the properties

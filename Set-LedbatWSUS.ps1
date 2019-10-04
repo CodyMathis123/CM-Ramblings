@@ -125,7 +125,7 @@ Function Write-CMLogEntry {
     
         # Add value to log file
         try {
-            $StreamWriter = New-Object -SeverityName System.IO.StreamWriter -ArgumentList $LogFilePath, 'Append'
+            $StreamWriter = New-Object -TypeName System.IO.StreamWriter -ArgumentList $LogFilePath, 'Append'
             $StreamWriter.WriteLine($LogText)
             $StreamWriter.Close()
         }

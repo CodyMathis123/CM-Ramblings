@@ -1,4 +1,4 @@
-function Invoke-CMBLEvaluation {
+function Invoke-CCMBaseline {
     <#
 .SYNOPSIS
     Invoke SCCM Configuration Baselines on the specified computers
@@ -13,29 +13,29 @@ function Invoke-CMBLEvaluation {
 .PARAMETER Credential
     Provides optional credentials to use for the WMI cmdlets.
 .EXAMPLE
-    C:\PS> Invoke-CMBLEvaluation
+    C:\PS> Invoke-CCMBaseline
         Invoke all baselines identified in WMI on the local computer.
 .EXAMPLE
-    C:\PS> Invoke-CMBLEvaluation -ComputerName 'Workstation1234','Workstation4321' -BaselineName 'Check Computer Compliance','Double Check Computer Compliance'
+    C:\PS> Invoke-CCMBaseline -ComputerName 'Workstation1234','Workstation4321' -BaselineName 'Check Computer Compliance','Double Check Computer Compliance'
         Invoke the two baselines on the computers specified. This demonstrates that both ComputerName and BaselineName accept string arrays.
 .EXAMPLE
-    C:\PS> Invoke-CMBLEvaluation -ComputerName 'Workstation1234','Workstation4321'
+    C:\PS> Invoke-CCMBaseline -ComputerName 'Workstation1234','Workstation4321'
         Invoke all baselines identified in WMI for the computers specified. 
 .NOTES
-    FileName:    Invoke-CMBLEvaluation.ps1
+    FileName:    Invoke-CCMBaseline.ps1
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     2019-07-24
-    Updated:     2019-08-08
+    Updated:     2019-07-24
 
     It is important to note that if a configuration baseline has user settings, the only way to invoke it is if the user is logged in, and you run this script
     with those credentials. An example would be if Workstation1234 has user Jim1234 logged in, with a configuration baseline 'FixJimsStuff' that has user settings,
 
     This command would successfully invoke FixJimsStuff
-    Invoke-CMBLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff' -Credential $JimsCreds
+    Invoke-CCMBaseline.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff' -Credential $JimsCreds
 
     This command would not find the baseline FixJimsStuff, and be unable to invoke it
-    Invoke-CMBLEvaluation.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff'
+    Invoke-CCMBaseline.ps1 -ComputerName 'Workstation1234' -BaselineName 'FixJimsStuff'
 
     You could remotely invoke that baseline AS Jim1234, with either a runas on PowerShell, or providing Jim's credentials to the function's -Credential param.
     If you try to invoke this same baseline without Jim's credentials being used in some way you will see that the baseline is not found.
@@ -47,9 +47,9 @@ function Invoke-CMBLEvaluation {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-        [Alias('Computer', 'PSComputerName', 'IPAddress')]
+        [Alias('Computer', 'PSComputerName', 'IPAddress', 'ServerName', 'HostName', 'DNSHostName')]
         [string[]]$ComputerName = $env:COMPUTERNAME,
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string[]]$BaselineName,
         [parameter(Mandatory = $false)]
         [pscredential]$Credential
@@ -86,7 +86,7 @@ function Invoke-CMBLEvaluation {
         $PropertyOptions = 'IsEnforced', 'IsMachineTarget', 'Name', 'PolicyType', 'Version'
     }
     process {
-        $Return = foreach ($Computer in $ComputerName) {
+        foreach ($Computer in $ComputerName) {
             $getWmiObjectSplat['ComputerName'] = $Computer
             foreach ($BLName in $BaselineName) {
                 #region Query WMI for Configuration Baselines based off DisplayName
@@ -100,19 +100,17 @@ function Invoke-CMBLEvaluation {
                 }
                 Write-Verbose "Checking for Configuration Baselines on [ComputerName='$Computer'] with [Query=`"$BLQuery`"]"
                 $getWmiObjectSplat['Query'] = $BLQuery
-                $getWmiObjectSplat['ErrorAction'] = "Stop"
-                try {
-                    $Baselines = Get-WmiObject @getWmiObjectSplat
-                }
-                catch {
-                    return Write-Warning -Message ("{0}: {1}" -f $Computer, $_.Exception.Message)
-                }
+                $Baselines = Get-WmiObject @getWmiObjectSplat
                 #endregion Query WMI for Configuration Baselines based off DisplayName
 
                 #region Based on results of WMI Query, identify arguments and invoke TriggerEvaluation
                 switch ($null -eq $Baselines) {
                     $false {
                         foreach ($BL in $Baselines) {
+                            $Return = @{ }
+                            $Return['ComputerName'] = $Computer
+                            $Return['BaselineName'] = $BL.DisplayName
+
                             #region generate a property ordered list of existing arguments to pass to the TriggerEvaluation method. Order is important!
                             $ValidParams = $BL.GetMethodParameters('TriggerEvaluation').Properties.Name
                             $compareObjectSplat = @{
@@ -123,33 +121,32 @@ function Invoke-CMBLEvaluation {
                                 PassThru         = $true
                             }
                             $Select = Compare-Object @compareObjectSplat
-                            $BaselineArguments = foreach ($Property in $Select) {
+
+                            $invokeWmiMethodSplat['ArgumentList'] = foreach ($Property in $Select) {
                                 $BL.$Property
                             }
                             #endregion generate a property ordered list of existing arguments to pass to the TriggerEvaluation method. Order is important!
 
                             #region Trigger the Configuration Baseline to run
                             $invokeWmiMethodSplat['ComputerName'] = $Computer
-                            $invokeWmiMethodSplat['ArgumentList'] = $BaselineArguments
-                            $invokeWmiMethodSplat['ErrorAction'] = "Stop"
                             Write-Verbose "Identified the Configuration Baseline [BaselineName='$($BL.DisplayName)'] on [ComputerName='$Computer'] will trigger via the 'TriggerEvaluation' WMI method"
-                            try {
+                            $Return['Invoked'] = try {
                                 $Invocation = Invoke-WmiMethod @invokeWmiMethodSplat
                                 switch ($Invocation.ReturnValue) {
                                     0 {
-                                        $Invoked = $true
+                                        $true
                                     }
                                     default {
-                                        $Invoked = $false
+                                        $false
                                     }
                                 }
                             }
                             catch {
-                                $Invoked = $false
+                                $false
                             }
 
                             #region convert LastComplianceStatus to readable value
-                            $LastComplianceStatus = switch ($BL.LastComplianceStatus) {
+                            $Return['LastComplianceStatus'] = switch ($BL.LastComplianceStatus) {
                                 1 {
                                     'Compliant'
                                 }
@@ -164,44 +161,28 @@ function Invoke-CMBLEvaluation {
                                 try {
                                     $LastEvalTimeUTC = [DateTime]::ParseExact((($BL.LastEvalTime).Split('+|-')[0]), 'yyyyMMddHHmmss.ffffff', [System.Globalization.CultureInfo]::InvariantCulture)
                                     $TimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById([system.timezone]::CurrentTimeZone.StandardName)
-                                    $LastEvalTime = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
+                                    $Return['LastEvalTime'] = [System.TimeZoneInfo]::ConvertTimeFromUtc($LastEvalTimeUTC, $TimeZone)
                                 }
                                 catch {
                                     Write-Verbose "[BL.LastEvalTime = '$($BL.LastEvalTime)'] [LastEvalTimeUTC = '$LastEvalTimeUTC'] [TimeZone = '$TimeZone'] [LastEvalTime = '$LastEvalTime']"
-                                    $LastEvalTime = 'No Data'
+                                    $Return['LastEvalTime'] = 'No Data'
                                 }
                             }
                             else {
-                                $LastEvalTime = 'No Data'
+                                $Return['LastEvalTime'] = 'No Data'
                             }
                             #endregion convert LastEvalTime to local time zone DateTime object
 
-                            [pscustomobject] @{
-                                ComputerName         = $Computer
-                                Baseline             = $BL.DisplayName
-                                Invoked              = $Invoked
-                                LastComplianceStatus = $LastComplianceStatus
-                                LastEvalTime         = $LastEvalTime
-                            }
+                            [pscustomobject]$Return
                             #endregion Trigger the Configuration Baseline to run
                         }
                     }
                     $true {
                         Write-Warning "Failed to identify any Configuration Baselines on [ComputerName='$Computer'] with [Query=`"$BLQuery`"]"
-                        [pscustomobject] @{
-                            ComputerName         = $Computer
-                            Baseline             = $BLName
-                            Invoked              = 'Not Found'
-                            LastComplianceStatus = $null
-                            LastEvalTime         = $null
-                        }
                     }
                 }
                 #endregion Based on results of WMI Query, identify arguments and invoke TriggerEvaluation
             }
         }
-    }
-    end {
-        return $Return
     }
 }

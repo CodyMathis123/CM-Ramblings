@@ -1,4 +1,5 @@
 function Get-CCMBaseline {
+    [CmdletBinding(SupportsShouldProcess = $true)]
     <#
 .SYNOPSIS
     Get SCCM Configuration Baselines on the specified computer(s)
@@ -26,7 +27,7 @@ function Get-CCMBaseline {
     Author:      Cody Mathis
     Contact:     @CodyMathis123
     Created:     2019-07-24
-    Updated:     2019-07-24
+    Updated:     2019-10-16
 
     It is important to note that if a configuration baseline has user settings, the only way to search for it is if the user is logged in, and you run this script
     with those credentials. An example would be if Workstation1234 has user Jim1234 logged in, with a configuration baseline 'FixJimsStuff' that has user settings,
@@ -40,12 +41,11 @@ function Get-CCMBaseline {
     You could remotely query for that baseline AS Jim1234, with either a runas on PowerShell, or providing Jim's credentials to the function's -Credential param.
     If you try to query for this same baseline without Jim's credentials being used in some way you will see that the baseline is not found.
 #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [Alias('Computer', 'PSComputerName', 'IPAddress', 'ServerName', 'HostName', 'DNSHostName')]
         [string[]]$ComputerName = $env:COMPUTERNAME,
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string[]]$BaselineName,
         [parameter(Mandatory = $false)]
         [pscredential]$Credential
@@ -59,11 +59,6 @@ function Get-CCMBaseline {
         switch ($PSBoundParameters.ContainsKey('Credential')) {
             $true {
                 $getWmiObjectSplat.Add('Credential', $Credential)
-            }
-        }
-        switch ($PSBoundParameters.ContainsKey('BaselineName')) {
-            $false {
-                $BaselineName = 'NotSpecified'
             }
         }
         #endregion Setup our common *-WMI* parameters that will apply to the WMI cmdlets in use based on input parameters
@@ -83,7 +78,15 @@ function Get-CCMBaseline {
                 }
                 Write-Verbose "Checking for Configuration Baselines on [ComputerName='$Computer'] with [Query=`"$BLQuery`"]"
                 $getWmiObjectSplat['Query'] = $BLQuery
-                $Baselines = Get-WmiObject @getWmiObjectSplat
+                try {
+                    $Baselines = Get-WmiObject @getWmiObjectSplat
+                }
+                catch {
+                    # need to improve this - should catch access denied vs RPC, and need to do this on ALL WMI related queries across the module. 
+                    # Maybe write a function???
+                    Write-Error "Failed to query for baselines on $Computer"
+                    continue
+                }
                 #endregion Query WMI for Configuration Baselines based off DisplayName
 
                 #region Based on results of WMI Query, return additional information around compliance and eval time
@@ -93,14 +96,21 @@ function Get-CCMBaseline {
                             $Return = @{ }
                             $Return['ComputerName'] = $Computer
                             $Return['BaselineName'] = $BL.DisplayName
+                            $Return['Version'] = $BL.Version
                             
                             #region convert LastComplianceStatus to readable value
                             $Return['LastComplianceStatus'] = switch ($BL.LastComplianceStatus) {
+                                4 {
+                                    'Error'
+                                }
+                                2 {
+                                    'Non-Compliant'
+                                }
                                 1 {
                                     'Compliant'
                                 }
                                 0 {
-                                    'Non-Compliant'
+                                    'Compliance State Unknown'
                                 }
                             }
                             #endregion convert LastComplianceStatus to readable value

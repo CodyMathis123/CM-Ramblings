@@ -14,12 +14,6 @@ $Component = switch ($Remediate) {
 }
 #endregion define variables
 
-try {
-    $WSUS_Server = Get-WsusServer -ErrorAction Stop
-}
-catch {
-}
-
 #region functions
 Function Write-CMLogEntry {
     <#
@@ -145,48 +139,84 @@ $PSDefaultParameterValues["Write-CMLogEntry:Folder"] = $LogPath
 $PSDefaultParameterValues["Write-CMLogEntry:MaxLogFileSize"] = 1MB
 $PSDefaultParameterValues["Write-CMLogEntry:MaxNumOfRotatedLogs"] = 2
 $PSDefaultParameterValues["Write-CMLogEntry:Enable"] = $Logging
-
 #endregion set function defaults
+
 Write-CMLogEntry -Value $('-' * 50)
-if ($null -ne $WSUS_Server) {
-    Write-CMLogEntry -Value "$env:ComputerName is configured as a WSUS server - will validate Port and LEDBAT Configuration"
-    $WSUS_Port = $WSUS_Server | Select-Object -ExpandProperty PortNumber
-    Write-CMLogEntry -Value "WSUS Port identified as $WSUS_Port"
-    try {
-        $LEDBAT_Enabled = [bool](Get-NetTCPSetting -SettingName InternetCustom -CongestionProvider LEDBAT -ErrorAction SilentlyContinue)
-        Write-CMLogEntry -Value "Status of LEDBAT [Enabled=$LEDBAT_Enabled]"
-        $CustomPortSet = [bool](Get-NetTransportFilter -LocalPortStart $WSUS_Port -LocalPortEnd $WSUS_Port -SettingName InternetCustom -RemotePortStart 0 -RemotePortEnd 65535 -ErrorAction SilentlyContinue)
-        Write-CMLogEntry -Value "Status of LEDBAT Port [Set=$CustomPortSet]"
+try {
+    $WSUS_Server = Get-WsusServer -ErrorAction Stop
+}
+catch {
+    Write-CMLogEntry -Value "Failed to connect to local WSUS Server - Will assume this is not a WSUS Server and return compliant" -Severity 3
+}
+
+switch ($WSUS_Server -is [Microsoft.UpdateServices.Internal.BaseApi.UpdateServer]) {
+    $true {
+        Write-CMLogEntry -Value "$env:ComputerName is configured as a WSUS server - will validate Port and LEDBAT Configuration"
+        $WSUS_Port = $WSUS_Server | Select-Object -ExpandProperty PortNumber
+        Write-CMLogEntry -Value "WSUS Port identified as $WSUS_Port"
+        try {
+            $LEDBAT_Enabled = [bool](Get-NetTCPSetting -SettingName InternetCustom -CongestionProvider LEDBAT -ErrorAction Stop)
+            Write-CMLogEntry -Value "Status of LEDBAT [Enabled=$LEDBAT_Enabled]"
+            $CustomPortSet = [bool](Get-NetTransportFilter -LocalPortStart $WSUS_Port -LocalPortEnd $WSUS_Port -SettingName InternetCustom -RemotePortStart 0 -RemotePortEnd 65535 -ErrorAction Stop)
+            Write-CMLogEntry -Value "Status of LEDBAT Port [Set=$CustomPortSet]"
+        }
+        catch {
+            Write-CMLogEntry -Value "Failed to query for LEDBAT settings - returning non-compliant"
+            Write-CMLogEntry -Value $('-' * 50)
+            return $false
+        }
+        switch ($LEDBAT_Enabled -and $CustomPortSet) {
+            $true {
+                Write-CMLogEntry -Value "LEDBAT for WSUS is configured correctly"
+                Write-CMLogEntry -Value $('-' * 50)
+                return $true
+            }
+            $false {
+                switch ($LEDBAT_Enabled) {
+                    $false {
+                        Write-CMLogEntry -Value "LEDBAT is not enabled on this machine" -Severity 3
+                        switch ($Remediate) {
+                            $true {
+                                Write-CMLogEntry -Value "Marked for remediation - will enable LEDBAT" -Severity 2
+                                try {
+                                    Set-NetTCPSetting -SettingName InternetCustom -CongestionProvider LEDBAT -ErrorAction Stop
+                                    Write-CMLogEntry -Value "LEDBAT enabled"
+                                }
+                                catch {
+                                    Write-CMLogEntry -Value "Failed to enable LEDBAT" -Severity 3
+                                    Write-CMLogEntry -Value $('-' * 50)
+                                    return $false
+                                }
+                            }
+                        }
+                    }
+                }
+                switch ($CustomPortSet) {
+                    $false {
+                        Write-CMLogEntry -Value "Custom Port $WSUS_Port is not correctly configured" -Severity 3
+                        switch ($Remediate) {
+                            $true {
+                                Write-CMLogEntry -Value "Marked for remediation - will configure LEDBAT custom port to $WSUS_Port" -Severity 2
+                                try {
+                                    New-NetTransportFilter -SettingName InternetCustom -LocalPortStart $WSUS_Port -LocalPortEnd $WSUS_Port -RemotePortStart 0 -RemotePortEnd 65535 -ErrorAction Stop
+                                    Write-CMLogEntry -Value "LEDBAT configured to use custom port $WSUS_Port"
+                                }
+                                catch {
+                                    Write-CMLogEntry -Value "Failed to configured LEDBAT to use custom port $WSUS_Port" -Severity 3
+                                    Write-CMLogEntry -Value $('-' * 50)
+                                    return $false
+                                }
+                            }
+                        }
+                    }
+                }
+                Write-CMLogEntry -Value $('-' * 50)
+                return $Remediate
+            }
+        }
     }
-    catch {
-    }
-    if ($LEDBAT_Enabled -and $CustomPortSet) {
-        Write-CMLogEntry -Value "LEDBAT for WSUS is configured correctly"
+    $false {
         Write-CMLogEntry -Value $('-' * 50)
         return $true
     }
-    else {
-        if (-not $LEDBAT_Enabled) {
-            Write-CMLogEntry -Value "LEDBAT is not enabled on this machine" -Severity 3
-            if ($Remediate) {
-                Write-CMLogEntry -Value "Marked for remediation - will enable LEDBAT" -Severity 2
-                Set-NetTCPSetting -SettingName InternetCustom -CongestionProvider LEDBAT -ErrorAction Stop
-            }
-        }
-        if ( -not $CustomPortSet) {
-            Write-CMLogEntry -Value "Custom Port $WSUS_Port is not correctly configured" -Severity 3
-            if ($Remediate) {
-                Write-CMLogEntry -Value "Marked for remediation - will configure LEDBAT custom port to $WSUS_Port" -Severity 2
-                New-NetTransportFilter -SettingName InternetCustom -LocalPortStart $WSUS_Port -LocalPortEnd $WSUS_Port -RemotePortStart 0 -RemotePortEnd 65535 -ErrorAction Stop
-            }
-        }
-        Write-CMLogEntry -Value $('-' * 50)
-        return $Remediate
-    }
-}
-else {
-    Write-CMLogEntry -Value "This machine is not a WSUS server - exiting" -Severity 3
-    Write-CMLogEntry -Value $('-' * 50)
-    return $false
-}
-#endregion detection/remediation
+    #endregion detection/remediation

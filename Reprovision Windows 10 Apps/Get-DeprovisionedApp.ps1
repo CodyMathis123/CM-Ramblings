@@ -15,8 +15,6 @@ function Get-DeprovisionedApp {
     .EXAMPLE
         PS C:\> Get-DeprovisionedApp -Filter Store
         Return all deprovisioned apps on the local computers that match the filter 'Store'
-    .OUTPUTS
-        [array]
     #>
     param (
         [parameter(Mandatory = $false)]

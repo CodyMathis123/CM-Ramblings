@@ -1,4 +1,4 @@
-function Get-DeprovisionedApp {
+function Get-DeprovisionedAppX {
     <#
     .SYNOPSIS
         Returns an array of apps that are deprovisioned
@@ -10,10 +10,10 @@ function Get-DeprovisionedApp {
         Option filter that will be ran through as a '-match' so that regex can be used
         Accepts an array of strings, which can be a regex string if you wish
     .EXAMPLE
-        PS C:\> Get-DeprovisionedApp
+        PS C:\> Get-DeprovisionedAppX
         Return all deprovisioned apps on the local computers
     .EXAMPLE
-        PS C:\> Get-DeprovisionedApp -Filter Store
+        PS C:\> Get-DeprovisionedAppX -Filter Store
         Return all deprovisioned apps on the local computers that match the filter 'Store'
     #>
     param (
@@ -33,7 +33,7 @@ function Get-DeprovisionedApp {
                 foreach ($SearchString in $Filter) {
                     switch -regex ($AllDeprovisionedApps.DeprovisionedApp) {
                         $SearchString {
-                            [PSCustomObject]@{ 
+                            [PSCustomObject]@{
                                 'DeprovisionedApp' = $PSItem
                             }
                         }

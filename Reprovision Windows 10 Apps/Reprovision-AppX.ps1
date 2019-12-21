@@ -1,4 +1,4 @@
-function Reprovision-App {
+function Reprovision-AppX {
     <#
     .SYNOPSIS
         'Reprovision' apps by removing the registry key that prevents app reinstall
@@ -8,15 +8,15 @@ function Reprovision-App {
         registry keys, we can ensure that deprovisioned apps, such as the windows store are able to be reinstalled.
     .PARAMETER DeprovisionedApp
         The full name of the app to reprovision, as it appears in the registry. You can easily get this name using
-        the Get-DeprovisionedApp function. 
+        the Get-DeprovisionedApp function.
     .EXAMPLE
-        PS C:\> Reprovision-App -DeprovisionedApp 'Microsoft.WindowsAlarms_8wekyb3d8bbwe'
+        PS C:\> Reprovision-AppX -DeprovisionedApp 'Microsoft.WindowsAlarms_8wekyb3d8bbwe'
         Removes the registry key for the deprovisioned WindowsAlarms app. The app will return after the next
         feature update.
     .INPUTS
         [string[]]
     .NOTES
-        You must provide the exact name of the app as it appears in the registry. This is the full app 'name' - It is 
+        You must provide the exact name of the app as it appears in the registry. This is the full app 'name' - It is
         recommended to first use the Get-DeprovisionApp function to find apps that can be reprovisioned.
     #>
     [CmdletBinding(SupportsShouldProcess)]

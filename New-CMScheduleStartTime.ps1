@@ -40,7 +40,7 @@ Function New-CMScheduleStartTime {
                     $HourDuration = $CMSchedule.HourDuration
                     $MinuteDuration = $CMSchedule.MinuteDuration
                     $NewEndTime = $StartTime.AddDays($DayDuration).AddHours($HourDuration).AddMinutes($MinuteDuration)
-                    New-CMSchedule -Start $StartTime -End $NewEndTime -Nonrecurring
+                    New-CMSchedule -Start $StartTime -End $NewEndTime -Nonrecurring -IsUtc:$CMSchedule.IsGMT
                 }
                 SMS_ST_RecurInterval {
                     if ($CMSchedule.MinuteSpan -ne 0) {

@@ -1,4 +1,4 @@
-Function New-CCMScheduleStartTime {
+Function New-CMScheduleStartTime {
     [CmdletBinding()]
     <#
         .SYNOPSIS
@@ -14,9 +14,9 @@ Function New-CCMScheduleStartTime {
         .EXAMPLE
             CCM:\> $Sched = Get-CMMaintenanceWindow -CollectionName 'test'
                 $Schedobject = Convert-CMSchedule -ScheduleString $Sched.ServiceWindowSchedules
-                New-CCMScheduleStartTime -CMSchedule $Schedobject -StartTime $Schedobject.StartTime.AddDays(5)
+                New-CMScheduleStartTime -CMSchedule $Schedobject -StartTime $Schedobject.StartTime.AddDays(5)
         .NOTES
-            FileName:    New-CCMScheduleStartTime.ps1
+            FileName:    New-CMScheduleStartTime.ps1
             Author:      Cody Mathis
             Contact:     @CodyMathis123
             Created:     2020-02-26

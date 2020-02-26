@@ -32,7 +32,6 @@ Function New-CMScheduleStartTime {
     begin {
         $NewSchedSplat = @{
             Start = $StartTime
-            IsUTC = $Schedule.IsGMT
         }
     }
     process {
@@ -43,6 +42,7 @@ Function New-CMScheduleStartTime {
             $MinuteDuration = $Schedule.MinuteDuration
             $NewEndTime = $StartTime.AddDays($DayDuration).AddHours($HourDuration).AddMinutes($MinuteDuration)
             $NewSchedSplat['End'] = $NewEndTime
+            $NewSchedSplat['IsUTC'] = $Schedule.IsGMT
             Switch ($RecurType) {
                 SMS_ST_NonRecurring {
                     $DayDuration = $Schedule.DayDuration

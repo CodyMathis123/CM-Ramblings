@@ -36,41 +36,41 @@ Function New-CMScheduleStartTime {
             $RecurType = $Schedule.SmsProviderObjectPath
             Switch ($RecurType) {
                 SMS_ST_NonRecurring {
-                    $DayDuration = $CMSchedule.DayDuration
-                    $HourDuration = $CMSchedule.HourDuration
-                    $MinuteDuration = $CMSchedule.MinuteDuration
+                    $DayDuration = $Schedule.DayDuration
+                    $HourDuration = $Schedule.HourDuration
+                    $MinuteDuration = $Schedule.MinuteDuration
                     $NewEndTime = $StartTime.AddDays($DayDuration).AddHours($HourDuration).AddMinutes($MinuteDuration)
-                    New-CMSchedule -Start $StartTime -End $NewEndTime -Nonrecurring -IsUtc:$CMSchedule.IsGMT
+                    New-Schedule -Start $StartTime -End $NewEndTime -Nonrecurring -IsUtc:$Schedule.IsGMT
                 }
                 SMS_ST_RecurInterval {
-                    if ($CMSchedule.MinuteSpan -ne 0) {
+                    if ($Schedule.MinuteSpan -ne 0) {
                         $Span = 'Minutes'
-                        $Interval = $CMSchedule.MinuteSpan
+                        $Interval = $Schedule.MinuteSpan
                     }
-                    elseif ($CMSchedule.HourSpan -ne 0) {
+                    elseif ($Schedule.HourSpan -ne 0) {
                         $Span = 'Hours'
-                        $Interval = $CMSchedule.HourSpan
+                        $Interval = $Schedule.HourSpan
                     }
-                    elseif ($CMSchedule.DaySpan -ne 0) {
+                    elseif ($Schedule.DaySpan -ne 0) {
                         $Span = 'Days'
-                        $Interval = $CMSchedule.DaySpan
+                        $Interval = $Schedule.DaySpan
                     }
 
-                    New-CMSchedule -Start $StartTime -RecurInterval $Span -RecurCount $Interval -IsUtc:$CMSchedule.IsGMT
+                    New-Schedule -Start $StartTime -RecurInterval $Span -RecurCount $Interval -IsUtc:$Schedule.IsGMT
                 }
                 SMS_ST_RecurWeekly {
-                    $Day = $CMSchedule.Day
-                    $WeekRecurrence = $CMSchedule.ForNumberOfWeeks
-                    New-CMSchedule -Start $StartTime -DayOfWeek $([DayOfWeek]($Day - 1)) -RecurCount $WeekRecurrence -IsUtc:$CMSchedule.IsGMT
+                    $Day = $Schedule.Day
+                    $WeekRecurrence = $Schedule.ForNumberOfWeeks
+                    New-Schedule -Start $StartTime -DayOfWeek $([DayOfWeek]($Day - 1)) -RecurCount $WeekRecurrence -IsUtc:$Schedule.IsGMT
                 }
                 SMS_ST_RecurMonthlyByWeekday {
-                    $Day = $CMSchedule.Day
-                    $ForNumberOfMonths = $CMSchedule.ForNumberOfMonths
-                    $WeekOrder = $CMSchedule.WeekOrder
-                    New-CMSchedule -Start $StartTime -DayOfWeek $([DayOfWeek]($Day - 1)) -WeekOrder $WeekOrder -IsUtc:$CMSchedule.IsGMT -RecurCount $ForNumberOfMonths
+                    $Day = $Schedule.Day
+                    $ForNumberOfMonths = $Schedule.ForNumberOfMonths
+                    $WeekOrder = $Schedule.WeekOrder
+                    New-Schedule -Start $StartTime -DayOfWeek $([DayOfWeek]($Day - 1)) -WeekOrder $WeekOrder -IsUtc:$Schedule.IsGMT -RecurCount $ForNumberOfMonths
                 }
                 SMS_ST_RecurMonthlyByDate {
-                    New-CMSchedule -Start $StartTime -DayOfMonth $CMSchedule.MonthDay -RecurCount $CMSchedule.ForNumberOfMonths -IsUtc:$CMSchedule.IsGMT
+                    New-Schedule -Start $StartTime -DayOfMonth $Schedule.MonthDay -RecurCount $Schedule.ForNumberOfMonths -IsUtc:$Schedule.IsGMT
                 }
                 Default {
                     Write-Error "Parsing Schedule String resulted in invalid type of $RecurType"

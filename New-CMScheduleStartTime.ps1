@@ -47,47 +47,54 @@ Function New-CMScheduleStartTime {
             $NewSchedSplat['IsUTC'] = $Schedule.IsGMT
             #endregion define the paramters that are the same for all 'new' schedules
 
-            #region based on recur type, we will add parameters to our $NewSchedSplat
-            Switch ($Schedule.SmsProviderObjectPath) {
-                SMS_ST_NonRecurring {
-                    $NewSchedSplat['Nonrecurring'] = $true
-                }
-                SMS_ST_RecurInterval {
-                    if ($Schedule.MinuteSpan -ne 0) {
-                        $Span = 'Minutes'
-                        $Interval = $Schedule.MinuteSpan
+            try {
+                #region based on recur type, we will add parameters to our $NewSchedSplat
+                Switch ($Schedule.SmsProviderObjectPath) {
+                    SMS_ST_NonRecurring {
+                        $NewSchedSplat['Nonrecurring'] = $true
                     }
-                    elseif ($Schedule.HourSpan -ne 0) {
-                        $Span = 'Hours'
-                        $Interval = $Schedule.HourSpan
+                    SMS_ST_RecurInterval {
+                        if ($Schedule.MinuteSpan -ne 0) {
+                            $Span = 'Minutes'
+                            $Interval = $Schedule.MinuteSpan
+                        }
+                        elseif ($Schedule.HourSpan -ne 0) {
+                            $Span = 'Hours'
+                            $Interval = $Schedule.HourSpan
+                        }
+                        elseif ($Schedule.DaySpan -ne 0) {
+                            $Span = 'Days'
+                            $Interval = $Schedule.DaySpan
+                        }
+                        $NewSchedSplat['RecurInterval'] = $Span
+                        $NewSchedSplat['RecurCount'] = $Interval
                     }
-                    elseif ($Schedule.DaySpan -ne 0) {
-                        $Span = 'Days'
-                        $Interval = $Schedule.DaySpan
+                    SMS_ST_RecurWeekly {
+                        $NewSchedSplat['DayOfWeek'] = [DayOfWeek]($Day - $Schedule.Day)
+                        $NewSchedSplat['RecurCount'] = $Schedule.ForNumberOfWeeks
                     }
-                    $NewSchedSplat['RecurInterval'] = $Span
-                    $NewSchedSplat['RecurCount'] = $Interval
+                    SMS_ST_RecurMonthlyByWeekday {
+                        $NewSchedSplat['DayOfWeek'] = [DayOfWeek]($Day - $Schedule.Day)
+                        $NewSchedSplat['WeekOrder'] = $Schedule.WeekOrder
+                        $NewSchedSplat['RecurCount'] = $Schedule.ForNumberOfMonths
+                    }
+                    SMS_ST_RecurMonthlyByDate {
+                        $NewSchedSplat['DayOfMonth'] = $Schedule.MonthDay
+                        $NewSchedSplat['RecurCount'] = $Schedule.ForNumberOfMonths
+                    }
+                    Default {
+                        Write-Error "Parsing Schedule String resulted in invalid type of $RecurType" -ErrorAction Stop
+                    }
                 }
-                SMS_ST_RecurWeekly {
-                    $NewSchedSplat['DayOfWeek'] = [DayOfWeek]($Day - $Schedule.Day)
-                    $NewSchedSplat['RecurCount'] = $Schedule.ForNumberOfWeeks
-                }
-                SMS_ST_RecurMonthlyByWeekday {
-                    $NewSchedSplat['DayOfWeek'] = [DayOfWeek]($Day - $Schedule.Day)
-                    $NewSchedSplat['WeekOrder'] = $Schedule.WeekOrder
-                    $NewSchedSplat['RecurCount'] = $Schedule.ForNumberOfMonths
-                }
-                SMS_ST_RecurMonthlyByDate {
-                    $NewSchedSplat['DayOfMonth'] = $Schedule.MonthDay
-                    $NewSchedSplat['RecurCount'] = $Schedule.ForNumberOfMonths
-                }
-                Default {
-                    Write-Error "Parsing Schedule String resulted in invalid type of $RecurType"
-                }
-            }
-            #endregion based on recur type, we will add parameters to our $NewSchedSplat
+                #endregion based on recur type, we will add parameters to our $NewSchedSplat
 
-            New-CMSchedule @NewSchedSplat
+                #region return our new CMSchedule
+                New-CMSchedule @NewSchedSplat
+                #endregion return our new CMSchedule
+            }
+            Catch {
+                $_.Exception.Message
+            }
         }
     }
 }

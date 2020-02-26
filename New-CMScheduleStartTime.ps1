@@ -39,10 +39,7 @@ Function New-CMScheduleStartTime {
     process {
         foreach ($Schedule in $CMSchedule) {
             #region determine new end time based off new start time, and existing durations
-            $DayDuration = $Schedule.DayDuration
-            $HourDuration = $Schedule.HourDuration
-            $MinuteDuration = $Schedule.MinuteDuration
-            $NewEndTime = $StartTime.AddDays($DayDuration).AddHours($HourDuration).AddMinutes($MinuteDuration)
+            $NewEndTime = $StartTime.AddDays($Schedule.DayDuration).AddHours($Schedule.HourDuration).AddMinutes($Schedule.MinuteDuration)
             #endregion determine new end time based off new start time, and existing durations
 
             #region define the paramters that are the same for all 'new' schedules

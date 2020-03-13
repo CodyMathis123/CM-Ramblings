@@ -24,7 +24,7 @@ function Add-FunctionToProfile {
             Write-Error "Failed to find the specified function [Name = '$FunctionName']"
             continue
         }    
-        $ScriptBlock = $Function | Select-Object -ExpandProperty ScriptBlock
+        $ScriptBlock = $Function.ScriptBlock
         if ($null -ne $ScriptBlock) {
             $FuncToAdd = [string]::Format("`r`nfunction {0} {{{1}}}", $FunctionName, $ScriptBlock)
             ($FuncToAdd -split "`n") | Add-Content -Path $PROFILE 

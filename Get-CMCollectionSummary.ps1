@@ -459,19 +459,50 @@ AND col.{0} = '{1}'
     }
     process {
         $CollectionSummaryQuery = [string]::Format(@"
-        DECLARE @ColRefresh TABLE
+DECLARE @CollectionPath TABLE
+		(
+	CollectionID varchar(8)
+	,
+	CollectionPath varchar(MAX)
+		)
+INSERT INTO @CollectionPath
+	(CollectionID, CollectionPath)
+SELECT col.SiteID AS 'Collection ID'
+	, f.FolderPath AS [CollectionPath]
+FROM [dbo].[v_Collections] col
+INNER JOIN FolderMembers fm ON fm.InstanceKey = col.SiteID
+INNER JOIN folders f ON f.ContainerNodeID = fm.ContainerNodeID
+
+DECLARE @StateMessages TABLE
+		(
+	CollectionID varchar(8)
+	,
+	CreatedBy varchar(50)
+	,
+	Created datetime
+		)
+INSERT INTO @StateMessages
+	(CollectionID, CreatedBy, Created)
+SELECT smwis.InsString2 [CollectionID]
+	, smwis.InsString1 [CreatedBy]
+	, smsgs.Time [Created]
+FROM v_StatMsgWithInsStrings smwis
+LEFT JOIN v_StatusMessage smsgs ON smsgs.RecordID = smwis.RecordID
+WHERE smsgs.MessageID = 30015
+
+DECLARE @ColRefresh TABLE
         (
     CollectionID varchar(8),
     EvaluationLength int,
     IncrementalEvaluationLength int
-        )
+        ) 
 INSERT INTO @ColRefresh
     (CollectionID, EvaluationLength, IncrementalEvaluationLength)
 SELECT col.SiteID AS CollectionID
     , MAX(EvaluationLength) AS EvaluationLength
     , MAX(IncrementalEvaluationLength) AS IncrementalEvaluationLength
 FROM [dbo].[v_Collections] as col
-    LEFT JOIN [dbo].[Collections_L] colref ON colref.CollectionID = col.CollectionID
+    LEFT JOIN [dbo].[Collections_L] colref ON colref.CollectionID = col.CollectionID 
 GROUP BY col.SiteID
 DECLARE @ColDependencies TABLE
         (
@@ -529,6 +560,7 @@ FROM [dbo].[v_Collections] as col
 GROUP BY col.SiteID, deppol.ClientSettingsID, deppol.CollectionID
 SELECT DISTINCT col.CollectionName
     , col.SiteID AS CollectionID
+	, colpath.CollectionPath
     , col.MemberCount
     , CASE
         WHEN (col.RefreshType = 1) THEN 'Manual Updates Only'
@@ -576,11 +608,15 @@ SELECT DISTINCT col.CollectionName
     , col.LimitToCollectionName
     , col.LimitToCollectionID
     , col.LastMemberChangeTime
-FROM [dbo].[v_Collections] AS col
-    LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
-    LEFT JOIN @ColDeployments AS coldeploy ON coldeploy.CollectionID = col.SiteID
-    LEFT JOIN @ColRefresh AS colrefresh ON colrefresh.CollectionID = col.SiteID
-    LEFT JOIN @ColDependencies AS coldep ON coldep.CollectionID = col.SiteID
+	, statmsg.CreatedBy
+	, statmsg.Created
+	FROM [dbo].[v_Collections] AS col
+		LEFT JOIN [dbo].[vSMS_ServiceWindow] mw ON mw.CollectionID = col.CollectionID
+		LEFT JOIN @ColDeployments AS coldeploy ON coldeploy.CollectionID = col.SiteID
+		LEFT JOIN @ColRefresh AS colrefresh ON colrefresh.CollectionID = col.SiteID
+		LEFT JOIN @ColDependencies AS coldep ON coldep.CollectionID = col.SiteID
+		LEFT JOIN @StateMessages AS statmsg ON statmsg.CollectionID = col.SiteID
+		LEFT JOIN @CollectionPath AS colpath ON colpath.CollectionID = col.SiteID
     {0}
 "@, $WhereFilter)
         if (-not [string]::IsNullOrWhiteSpace($WhereFilter)) {

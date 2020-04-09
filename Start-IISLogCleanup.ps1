@@ -28,7 +28,7 @@ param(
     [bool]$Remediate = $false,
     [Parameter(Mandatory = $false)]
     [ValidateRange(1, [int]::MaxValue)]
-    [int]$LogCleanupDays = 6
+    [int]$LogCleanupDays = 7
 )
 Import-Module WebAdministration
 $AllWebsites = Get-Website

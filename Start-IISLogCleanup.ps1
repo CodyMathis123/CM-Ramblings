@@ -2,12 +2,15 @@
     .SYNOPSIS
         IIS Log Cleanup
     .DESCRIPTION
-        This script will cleanup all IIS logs according to the LogCleanupDays parameter, and the Remediate parameter
+        This script will cleanup all IIS logs according to the LogCleanupDays parameter, and the Remediate parameter.
+        This was written for use in a MEMCM Configuration Item. You can paste this script into both detection, and 
+        remediation, adjusting the $Remediate paramater appropraitely. Ensure that the $LogCleanupDays parameter
+        matches in both scripts.
     .PARAMETER Remediate
         A boolean that determines if the logs will be cleaned up, or if we simply return compliance
     .PARAMETER LogCleanupDays
-        A positive integer value of days which you want to retain logs for, defaulting to 7. Anything older than the specified number of days will be removed,
-        or used to return compliance if remediation is set to false.
+        A positive integer value of days which you want to retain logs for, defaulting to 7. Anything older than the 
+        specified number of days will be removed, or used to return compliance if remediation is set to false.
     .EXAMPLE
         C:\PS> Start-IISLogCleanup -Remediate $False -LogCleanupDays 7
             Return a boolean based on whether there are log files older than 7 days

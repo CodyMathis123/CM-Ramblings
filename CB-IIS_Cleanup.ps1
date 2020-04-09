@@ -1,33 +1,34 @@
-#region detection
-Import-Module WebAdministration
-$IsClean = New-Object -TypeName System.Collections.ArrayList
+#region IIS Log Cleanup
+#region Variables
+$Remediate = $false
+$LogCleanupDays = 7
+#endregion Variables
 
-foreach ($WebSite in $(get-website)) {
-    $LogFile = "$($Website.logFile.directory)\w3svc$($website.id)".replace("%SystemDrive%", $env:SystemDrive)
-    if (Test-Path -Path $LogFile) {
-        if (Get-ChildItem -Path $LogFile -Filter "*.log" -Recurse | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-7)}) {
-            $null = $IsClean.Add($false)
-        }
-        else {
-            $null = $IsClean.Add($true)
+#region Action
+Import-Module WebAdministration
+$AllWebsites = Get-Website
+
+#region Loop through all websites, identify log file path, and check for old files. Removing according to remediation preference
+foreach ($WebSite in $AllWebsites) {
+    $LogFilePath = [string]::Format("{0}\w3svc{1}", $WebSite.LogFile.Directory, $WebSite.ID).Replace('%SystemDrive%', $env:SystemDrive)
+    if (Test-Path -Path $LogFilePath) {
+        $AllLogFiles = Get-ChildItem -Path $LogFilePath -Filter "*.log" -Recurse
+        if ($OldLogs = $AllLogFiles.Where( { $_.LastWriteTime -lt (Get-Date).AddDays(-$LogCleanupDays) })) {
+            switch ($Remediate) {
+                $true {
+                    $OldLogs | Remove-Item -Force
+                }
+                $false {
+                    return $false
+                }
+            }
         }
     }
 }
-if ($IsClean.Contains($false)) {
-    return $false
-}
-else {
-    return $true
-}
-#endregion detection
+#endregion Loop through all websites, identify log file path, and check for old files. Removing according to remediation preference
 
-#region remediation
-Import-Module WebAdministration
-
-foreach ($WebSite in $(get-website)) {
-    $LogFile = "$($Website.logFile.directory)\w3svc$($website.id)".replace("%SystemDrive%", $env:SystemDrive)
-    if (Test-Path -Path $LogFile) {
-        Get-ChildItem -Path $LogFile -Filter "*.log" -recurse | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-7)} | Remove-Item
-    }
-}
-#endregion remediation
+#region If we make it through the loop with no $false returns, then we are compliant. Return $True
+return $true
+#endregion If we make it through the loop with no $false returns, then we are compliant. Return $True
+#endregion Action
+#endregion IIS LogCleanup

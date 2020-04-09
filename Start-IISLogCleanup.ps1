@@ -15,7 +15,7 @@
         C:\PS> Start-IISLogCleanup -Remediate $False -LogCleanupDays 7
             Return a boolean based on whether there are log files older than 7 days
     .EXAMPLE
-        C:\PS> Start-IISLogCleanup -Remediate $False -LogCleanupDays 7
+        C:\PS> Start-IISLogCleanup -Remediate $True -LogCleanupDays 7
             Remove files older than 7 days, and return a boolean of $true if it was succesful
     .OUTPUTS
         [bool]

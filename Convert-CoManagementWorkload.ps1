@@ -33,12 +33,13 @@
     Author:   Cody Mathis
     Contact:  @CodyMathis123
     Created:  1/28/2019
-    Updated:  8/21/2019
+    Updated:  6/17/2020
 
     Version History:
     1.0.0 - (1/28/2019) Initial script creation
     1.0.1 - (1/29/2019) Added proper help and commenting and specified OutputType
     1.0.2 - (8/21/2019) Update workloads for 1906
+    1.0.3 - (6/17/2020) Stop using arraylist
 #>
 [OutputType([int], ParameterSetName = 'GenerateWorkload')]
 [OutputType([string[]], ParameterSetName = 'TranslateWorkload')]
@@ -72,9 +73,8 @@ switch ($PSCmdlet.ParameterSetName) {
             "Office Click-to-Run apps" = 129;
         }
         # Creating an arraylist and adding all the integer values for our workloads to the arraylist.
-        $ToCalc = [System.Collections.ArrayList]::new()
-        foreach ($Option in $DesiredWorkload) {
-            $null = $ToCalc.Add($Workloads[$Option])
+        $ToCalc = foreach ($Option in $DesiredWorkload) {
+            $ToCalc.Add($Workloads[$Option])
         }
 
         <#

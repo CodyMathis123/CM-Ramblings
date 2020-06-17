@@ -74,7 +74,7 @@ switch ($PSCmdlet.ParameterSetName) {
         }
         # Creating an arraylist and adding all the integer values for our workloads to the arraylist.
         $ToCalc = foreach ($Option in $DesiredWorkload) {
-            $ToCalc.Add($Workloads[$Option])
+            $Workloads[$Option]
         }
 
         <#

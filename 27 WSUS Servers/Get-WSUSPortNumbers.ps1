@@ -1,0 +1,59 @@
+function Get-WSUSPortNumbers {
+    [CmdletBinding()]
+    <#
+    .SYNOPSIS
+        Return the port numbers in use by WSUS
+    .DESCRIPTION
+        This function will automatically determine the ports in use by WSUS, and return them as a PSCustomObject.
+        
+        If WSUS is set to use any custom port other than 80/443 it 
+            automatically determines the HTTP as noted in the link below
+            https://docs.microsoft.com/en-us/windows-server/administration/windows-server-update-services/deploy/2-configure-wsus#configure-ssl-on-the-wsus-server
+                ... if you use any port other than 443 for HTTPS traffic, 
+                WSUS will send clear HTTP traffic over the port that numerically 
+                comes before the port for HTTPS. For example, if you use port 8531 for HTTPS, 
+                WSUS will use port 8530 for HTTP.
+    .EXAMPLE
+        PS C:\> Get-WSUSPortNumbers -WSUSServer (Get-WSUSServer)
+    .INPUTS
+        [Microsoft.UpdateServices.Internal.BaseApi.UpdateServer]
+    .OUTPUTS
+        [PSCustomerObject]
+    .NOTES
+        FileName: Get-WSUSPortNumbers.ps1
+        Author:   Cody Mathis
+        Contact:  @CodyMathis123
+        Created:  6/29/2020
+        Updated:  6/29/2020
+    #>
+    param (
+        [Parameter(Mandatory = $true)]
+        [object]$WSUSServer
+    )
+    #region Determine WSUS Port Numbers
+    $WSUS_Port1 = $WSUSServer.PortNumber
+    $WSUS_IsSSL = $WSUSServer.UseSecureConnection
+
+    switch ($WSUS_IsSSL) {
+        $true {
+            switch ($WSUS_Port1) {
+                443 {
+                    $WSUS_Port2 = 80
+                }
+                default {
+                    $WSUS_Port2 = $WSUS_Port1 - 1
+                }
+            }
+        }
+        $false {
+            $Wsus_Port2 = $null
+        }
+    }
+    #endregion Determine WSUS Port Numbers
+
+    return [PSCustomObject]@{
+        WSUSIsSSL = $WSUS_IsSSL
+        WSUSPort1 = $WSUS_Port1
+        WSUSPort2 = $WSUS_Port2
+    }
+}

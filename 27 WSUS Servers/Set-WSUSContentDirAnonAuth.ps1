@@ -1,6 +1,7 @@
 $Remediate = $false
+
 Import-Module WebAdministration
-$UseAppPoolIdentity = (Get-WebConfigurationProperty -Filter 'system.WebServer/security/authentication/AnonymousAuthentication' -Name username -Location 'WSUS Administration/Content') -eq ''
+$UseAppPoolIdentity = (Get-WebConfiguration "/system.applicationHost/sites/site[@name='WSUS Administration']/application[@path='/']/virtualdirectory[@path='/Content']").userName -eq [string]::Empty
 switch ($UseAppPoolIdentity) {
     $true {
         $true
@@ -8,7 +9,7 @@ switch ($UseAppPoolIdentity) {
     $false {
         switch ($Remediate) {
             $true {
-                Set-WebConfigurationProperty -Filter 'system.WebServer/security/authentication/AnonymousAuthentication' -name username -value '' -location 'WSUS Administration/Content'
+                Set-WebConfiguration "/system.applicationHost/sites/site[@name='WSUS Administration']/application[@path='/']/virtualdirectory[@path='/Content']" -Value @{userName = ''; password = '' }
                 $true
             }
             $false {

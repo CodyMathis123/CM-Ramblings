@@ -1,5 +1,12 @@
-[Void][Reflection.Assembly]::LoadWithPartialName("Microsoft.Web.Administration")
-$serverManager = New-Object Microsoft.Web.Administration.ServerManager
+try {
+    [Void][Reflection.Assembly]::LoadWithPartialName("Microsoft.Web.Administration")
+    $serverManager = New-Object Microsoft.Web.Administration.ServerManager -ErrorAction SilentlyContinue
+}
+catch {
+    # Deliberate empty return. If anything above throws an error, we assume we are not on a box with IIS
+    exit 0
+}
+
 $WSUS_ConfigKey = 'registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Update Services\Server\Setup'
 
 try {
@@ -11,4 +18,5 @@ try {
 }
 catch {
     # Deliberate empty return. If anything above throws an error, we assume we are not on an SSL WSUS box
+    exit 0
 }

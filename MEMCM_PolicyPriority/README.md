@@ -9,4 +9,6 @@ Set-CMAntiMalwarePolicyPriority -Name AVPolicy1 -Priority 3
 Set-CMClientSettingPriority -Name ClientSettings1 -Priority 1
 ```
 
+Whether the priority needs to increase, or decrease is handled automatically. You simply provide the desired priority and the let the function do the rest!
+
 They could be improved by adding pipeline support from the builtin Get-CM* cmdlets for the respective types.... feel free to add a pull request :)

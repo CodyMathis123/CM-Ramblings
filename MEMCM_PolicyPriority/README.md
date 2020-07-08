@@ -5,7 +5,7 @@ If you have ever been in an environment with even a handful of AV Policies, or C
 In this folder you'll find a couple quick functions to simplify setting the priority of a MEMCM Antimalware Policy, or Client Settings policy. Each functions supports -Verbose, and -WhatIf. An example of using each of them is below.
 
 ```ps
-Set-CMAntiMalwarePolicyPriority -Name AVPolicy1 -Priority 3
+Set-CMAntimalwarePolicyPriority -Name AVPolicy1 -Priority 3
 Set-CMClientSettingPriority -Name ClientSettings1 -Priority 1
 ```
 

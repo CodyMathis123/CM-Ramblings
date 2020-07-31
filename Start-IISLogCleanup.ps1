@@ -15,7 +15,7 @@
         C:\PS> Start-IISLogCleanup -Remediate $False -LogCleanupDays 7
             Return a boolean based on whether there are log files older than 7 days
     .EXAMPLE
-        C:\PS> Start-IISLogCleanup -Remediate $True -LogCleanupDays 7
+        C:\PS> Start-IISLogCleanup -Remediate $False -LogCleanupDays 7
             Remove files older than 7 days, and return a boolean of $true if it was succesful
     .OUTPUTS
         [bool]
@@ -23,43 +23,62 @@
         FileName:    Start-IISLogCleanup.ps1
         Author:      Cody Mathis
         Contact:     @CodyMathis123
+        Contributor: Vex
         Created:     2020-04-09
-        Updated:     2020-04-09
+        Version:     1.0.2
+        Updated:     
+            Version 1.0.0 2020-04-09 - Initial Release
+            Version 1.0.1 2020-04-09 - Cleaned up
+            Version 1.0.2 2020-04-09 - Added detection for available module; added function
+        
 #>
-param(
-    [Parameter(Mandatory = $false)]
-    [bool]$Remediate = $false,
-    [Parameter(Mandatory = $false)]
-    [ValidateRange(1, [int]::MaxValue)]
-    [int]$LogCleanupDays = 7
-)
-Import-Module WebAdministration
-$AllWebsites = Get-Website
+Function Start-IISLogCleanup {
+    param(
+        [Parameter(Mandatory = $false)]
+        [bool]$Remediate = $false,
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, [int]::MaxValue)]
+        [int]$LogCleanupDays = 7
+    )
 
-#region Loop through all websites, identify log file path, and check for old files. Removing according to remediation preference
-foreach ($WebSite in $AllWebsites) {
-    $LogFilePath = [string]::Format("{0}\w3svc{1}", $WebSite.LogFile.Directory, $WebSite.ID).Replace('%SystemDrive%', $env:SystemDrive)
-    if (Test-Path -Path $LogFilePath) {
-        $AllLogFiles = Get-ChildItem -Path $LogFilePath -Filter "*.log" -Recurse
-        if ($OldLogs = $AllLogFiles.Where( { $_.LastWriteTime -lt (Get-Date).AddDays(-$LogCleanupDays) })) {
-            switch ($Remediate) {
-                $true {
-                    try {
-                        $OldLogs | Remove-Item -Force -ErrorAction Stop
+    If (Get-Module -ListAvailable | Where-Object { $_.Name -eq 'WebAdministration' } ) {
+        Import-Module WebAdministration
+    }
+    Else {
+        Write-Verbose "No WebAdministration. Compliant."
+        return $true
+    }
+
+    $AllWebsites = Get-Website
+
+    #region Loop through all websites, identify log file path, and check for old files. Removing according to remediation preference
+    foreach ($WebSite in $AllWebsites) {
+        $LogFilePath = [string]::Format("{0}\w3svc{1}", $WebSite.LogFile.Directory, $WebSite.ID).Replace('%SystemDrive%', $env:SystemDrive)
+        if (Test-Path -Path $LogFilePath) {
+            $AllLogFiles = Get-ChildItem -Path $LogFilePath -Filter "*.log" -Recurse
+            if ($OldLogs = $AllLogFiles.Where( { $_.LastWriteTime -lt (Get-Date).AddDays(-$LogCleanupDays) })) {
+                switch ($Remediate) {
+                    $true {
+                        try {
+                            $OldLogs | Remove-Item -Force -ErrorAction Stop
+                        }
+                        catch {
+                            return $false
+                        }
                     }
-                    catch {
+                    $false {
                         return $false
                     }
-                }
-                $false {
-                    return $false
                 }
             }
         }
     }
-}
-#endregion Loop through all websites, identify log file path, and check for old files. Removing according to remediation preference
+    #endregion Loop through all websites, identify log file path, and check for old files. Removing according to remediation preference
 
-#region If we make it through the loop with no $false returns, then we are compliant. Return $True
-return $true
-#endregion If we make it through the loop with no $false returns, then we are compliant. Return $True
+    #region If we make it through the loop with no $false returns, then we are compliant. Return $True
+    Write-Verbose "Compliant."
+    return $true
+    #endregion If we make it through the loop with no $false returns, then we are compliant. Return $True
+}
+
+Start-IISLogCleanup -Remediate $false -LogCleanupDays 30

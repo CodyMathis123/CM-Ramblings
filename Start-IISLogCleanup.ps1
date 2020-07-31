@@ -20,6 +20,10 @@
     .OUTPUTS
         [bool]
     .NOTES
+        This is just the function declaration. You should call the function, as you see at the end of the file
+        based on the part of your CI this script is in. You would call it with -Remediate $false for detection
+        and then call it with -Remediate $true for remediation.
+    
         FileName:    Start-IISLogCleanup.ps1
         Author:      Cody Mathis
         Contact:     @CodyMathis123

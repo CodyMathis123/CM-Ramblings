@@ -123,8 +123,16 @@ function New-LoopAction {
                         }
                     }
                     . $ScriptBlock
+                    switch (. $ExitCondition) {
+                        $false {
+                            $ExitConditionResult = $false
+                        }
+                        Default {
+                            $ExitConditionResult = $true
+                        }
+                    }
                 }
-                until ((. $ExitCondition) -or $StopWatch.Elapsed -ge $TimeSpan)
+                until ($ExitConditionResult -eq $true -or $StopWatch.Elapsed -ge $TimeSpan)
             }
             'ForLoop' {
                 for ($i = 0; $i -lt $Iterations; $i++) {
@@ -142,7 +150,11 @@ function New-LoopAction {
                     . $ScriptBlock
                     if ($PSBoundParameters.ContainsKey('ExitCondition')) {
                         if (. $ExitCondition) {
+                            $ExitConditionResult = $true
                             break
+                        }
+                        else {
+                            $ExitConditionResult = $false
                         }
                     }
                 }
@@ -152,20 +164,20 @@ function New-LoopAction {
     end {
         switch ($PSCmdlet.ParameterSetName) {
             'DoUntil' {
-                if ((-not (. $ExitCondition)) -and $StopWatch.Elapsed -ge $TimeSpan -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
+                if ((-not ($ExitConditionResult)) -and $StopWatch.Elapsed -ge $TimeSpan -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
                     . $IfTimeoutScript
                 }
-                if ((. $ExitCondition) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
+                if (($ExitConditionResult) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
                     . $IfSucceedScript
                 }
                 $StopWatch.Reset()
             }
             'ForLoop' {
                 if ($PSBoundParameters.ContainsKey('ExitCondition')) {
-                    if ((-not (. $ExitCondition)) -and $i -ge $Iterations -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
+                    if ((-not ($ExitConditionResult)) -and $i -ge $Iterations -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
                         . $IfTimeoutScript
                     }
-                    elseif ((. $ExitCondition) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
+                    elseif (($ExitConditionResult) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
                         . $IfSucceedScript
                     }
                 }

@@ -4,8 +4,8 @@ function New-LoopAction {
         Function to loop a specified scriptblock until certain conditions are met
     .DESCRIPTION
         This function is a wrapper for a ForLoop or a DoUntil loop. This allows you to specify if you want to exit based on a timeout, or a number of iterations.
-            Additionally, you can specify an optional delay between loops, and the type of dealy (Minutes, Seconds). If needed, you can also perform an action based on
-            whether the 'Exit Condition' was met or not. This is the IfTimeoutScript and IfSucceedScript. 
+        Additionally, you can specify an optional delay between loops, and the type of dealy (Minutes, Seconds). If needed, you can also perform an action based on
+        whether the 'Exit Condition' was met or not. This is the IfTimeoutScript and IfSucceedScript. 
     .PARAMETER LoopTimeout
         A time interval integer which the loop should timeout after. This is for a DoUntil loop.
     .PARAMETER LoopTimeoutType
@@ -68,9 +68,9 @@ function New-LoopAction {
                 }
                 New-LoopAction @newLoopActionSplat
                 Breakfast
-.NOTES
+    .NOTES
         Play with the conditions a bit. I've tried to provide some examples that demonstrate how the loops, timeouts, and scripts work!
-#>
+    #>
     param
     (
         [parameter(Mandatory = $true, ParameterSetName = 'DoUntil')]

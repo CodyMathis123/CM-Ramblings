@@ -123,14 +123,7 @@ function New-LoopAction {
                         }
                     }
                     . $ScriptBlock
-                    switch (. $ExitCondition) {
-                        $false {
-                            $ExitConditionResult = $false
-                        }
-                        Default {
-                            $ExitConditionResult = $true
-                        }
-                    }
+                    $ExitConditionResult = . $ExitCondition
                 }
                 until ($ExitConditionResult -eq $true -or $StopWatch.Elapsed -ge $TimeSpan)
             }

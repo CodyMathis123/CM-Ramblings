@@ -1,5 +1,6 @@
 param(
-    $SoftwareUpdateGroupName
+    [Parameter(Mandatory = $true)]
+    [string]$SoftwareUpdateGroupName
 )
 # return a list of updates which are superseded by another update in the same SUG
 $SUG = Get-CMSoftwareUpdateGroup -Name $SoftwareUpdateGroupName

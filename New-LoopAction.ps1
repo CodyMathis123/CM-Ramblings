@@ -9,7 +9,7 @@ function New-LoopAction {
     .PARAMETER LoopTimeout
         A time interval integer which the loop should timeout after. This is for a DoUntil loop.
     .PARAMETER LoopTimeoutType
-         Provides the time increment type for the LoopTimeout, defaulting to Seconds. ('Seconds', 'Minutes', 'Hours', 'Days')
+        Provides the time increment type for the LoopTimeout, defaulting to Seconds. ('Seconds', 'Minutes', 'Hours', 'Days')
     .PARAMETER LoopDelay
         An optional delay that will occur between each loop.
     .PARAMETER LoopDelayType

@@ -1,3 +1,15 @@
+<#
+.SYNOPSIS
+    Launch the Teams install as the logged in user via a scheduled task
+.DESCRIPTION
+    This script will create a scheduled task if one is not found which is used to
+    install Microsoft Teams as the logged in user. This scheduled task executes
+    the Teams.exe found in %ProgramFiles% so that a user can start using Teams
+    shortly after the Machine Wide installer completes instead of having to 
+    log off and back on.
+.NOTES
+    Generally used as a script that runs after a Teams Machine Wide Installer completes
+#>
 if (!(Get-ScheduledTask -TaskName 'Teams User Install - Post Machine Wide Install' -ErrorAction SilentlyContinue)) {
     switch ([System.Environment]::Is64BitOperatingSystem) {
         $true {

@@ -37,8 +37,11 @@
     FileName:    New-ClientActionScheduledTask.ps1
     Author:      Cody Mathis
     Contact:     @CodyMathis123
+    Contributor: @SirwarlorD
+    Contact:     @CodyMathis123
     Created:     11-29-2018
-    Updated:     03-09-2019
+    Updated:     04-09-2021
+
 #>
 param (
     [parameter(Mandatory = $false)]
@@ -90,10 +93,9 @@ function Invoke-CCMClientAction {
         .NOTES
             FileName:    Invoke-CCMClientAction.ps1
             Author:      Cody Mathis
-            Contributor: @SirwarlorD
             Contact:     @CodyMathis123
             Created:     11-29-2018
-            Updated:     04-09-2021
+            Updated:     10-30-2019
     #>
     param
     (

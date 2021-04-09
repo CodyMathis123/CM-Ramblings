@@ -90,9 +90,10 @@ function Invoke-CCMClientAction {
         .NOTES
             FileName:    Invoke-CCMClientAction.ps1
             Author:      Cody Mathis
+            Contributor: @SirwarlorD
             Contact:     @CodyMathis123
             Created:     11-29-2018
-            Updated:     10-30-2019
+            Updated:     04-09-2021
     #>
     param
     (
@@ -263,6 +264,7 @@ try {
     $TaskDefinition = $TScomObject.NewTask(0)
     $TaskDefinition.Settings.Enabled = $true
     $TaskDefinition.Settings.AllowDemandStart = $true
+    $TaskDefinition.Settings.IdleSettings.StopOnIdleEnd = $false
     $TaskDefinition.Settings.DisallowStartIfOnBatteries = $false
     $TaskDefinition.Settings.StopIfGoingOnBatteries = $false
     $TaskDefinition.Settings.Compatibility = 2

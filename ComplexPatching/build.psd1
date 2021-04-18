@@ -1,1 +1,0 @@
-@{ Path = "ComplexPatching.psd1" }

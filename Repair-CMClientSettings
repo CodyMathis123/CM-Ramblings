@@ -1,0 +1,20 @@
+<#
+  Rebuilds all CM Client settings with a ' - Rebuild' note at the end. 
+  This simply loops all settings, recreates them, copies the agent configurations and redeploys them.
+  NOTE: THIS DELETES THE OLD ONES!!!!!!!
+#>
+$all = Get-CMClientSetting
+foreach ($clientSetting in $all) {
+    if ($clientSetting.Type -ne 0) {
+        $newClientSetting = New-CMClientSetting -Name "$($clientSetting.Name) - Rebuild" -Type $clientSetting.Type
+        $oldAgentConfigurations = $clientSetting.AgentConfigurations
+        $oldDeployments = Get-CMClientSettingDeployment -InputObject $clientSetting
+        $newClientSetting.SetArrayItems('AgentConfigurations', $oldAgentConfigurations)
+        $newClientSetting.Put()
+        foreach ($deployment in $oldDeployments) {
+            New-CMClientSettingDeployment -InputObject $newClientSetting -CollectionId $deployment.CollectionID
+            Remove-CMClientSettingDeployment -InputObject $deployment -Force
+        }
+        Remove-CMClientSetting -InputObject $clientSetting -Force
+    }
+}

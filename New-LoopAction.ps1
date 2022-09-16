@@ -108,6 +108,9 @@ function New-LoopAction {
                 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
                 $FirstRunDone = $false        
             }
+            'ForLoop' {
+                $FirstRunDone = $false
+            }
         }
     }
     process {

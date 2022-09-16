@@ -73,6 +73,8 @@ function New-LoopAction {
     #>
     param
     (
+        [parameter()]
+        [String]$Name = 'NoName',
         [parameter(Mandatory = $true, ParameterSetName = 'DoUntil')]
         [int32]$LoopTimeout,
         [parameter(Mandatory = $true, ParameterSetName = 'DoUntil')]
@@ -80,7 +82,7 @@ function New-LoopAction {
         [string]$LoopTimeoutType,
         [parameter(Mandatory = $true)]
         [int32]$LoopDelay,
-        [parameter(Mandatory = $false, ParameterSetName = 'DoUntil')]
+        [parameter(Mandatory = $false)]
         [ValidateSet('Milliseconds', 'Seconds', 'Minutes')]
         [string]$LoopDelayType = 'Seconds',
         [parameter(Mandatory = $true, ParameterSetName = 'ForLoop')]
@@ -96,6 +98,7 @@ function New-LoopAction {
         [scriptblock]$IfSucceedScript
     )
     begin {
+        Write-Verbose ('New-LoopAction: [{0}] Started' -f $Name)
         switch ($PSCmdlet.ParameterSetName) {
             'DoUntil' {
                 $paramNewTimeSpan = @{
@@ -122,8 +125,11 @@ function New-LoopAction {
                             Start-Sleep @paramStartSleep
                         }
                     }
+                    Write-Verbose ('New-LoopAction: [{0}] [DoUntil] Executing script block' -f $Name)
                     . $ScriptBlock
+                    Write-Verbose ('New-LoopAction: [{0}] [DoUntil] Done, executing exit condition script block' -f $Name)
                     $ExitConditionResult = . $ExitCondition
+                    Write-Verbose ('New-LoopAction: [{0}] [DoUntil] Done, exit condition result is {1} and elapsed time is {2}' -f $Name, $ExitConditionResult, $StopWatch.Elapsed)
                 }
                 until ($ExitConditionResult -eq $true -or $StopWatch.Elapsed -ge $TimeSpan)
             }
@@ -140,8 +146,10 @@ function New-LoopAction {
                             Start-Sleep @paramStartSleep
                         }
                     }
+                    Write-Verbose ('New-LoopAction: [{0}] [ForLoop - {1}/{2}] Executing script block' -f $Name, $i, $Iterations)
                     . $ScriptBlock
                     if ($PSBoundParameters.ContainsKey('ExitCondition')) {
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Done, executing exit condition script block' -f $Name)
                         if (. $ExitCondition) {
                             $ExitConditionResult = $true
                             break
@@ -149,6 +157,10 @@ function New-LoopAction {
                         else {
                             $ExitConditionResult = $false
                         }
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop - {1}/{2}] Done, exit condition result is {2}' -f $Name, $i, $Iterations, $ExitConditionResult)
+                    }
+                    else {
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop - {1}/{2}] Done' -f $Name, $i, $Iterations)
                     }
                 }
             }
@@ -158,31 +170,45 @@ function New-LoopAction {
         switch ($PSCmdlet.ParameterSetName) {
             'DoUntil' {
                 if ((-not ($ExitConditionResult)) -and $StopWatch.Elapsed -ge $TimeSpan -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
+                    Write-Verbose ('New-LoopAction: [{0}] [DoUntil] Executing timeout script block' -f $Name)
                     . $IfTimeoutScript
+                    Write-Verbose ('New-LoopAction: [{0}] [DoUntil] Done' -f $Name)
                 }
                 if (($ExitConditionResult) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
+                    Write-Verbose ('New-LoopAction: [{0}] [DoUntil] Executing success script block' -f $Name)
                     . $IfSucceedScript
+                    Write-Verbose ('New-LoopAction: [{0}] [DoUntil] Done' -f $Name)
                 }
                 $StopWatch.Reset()
             }
             'ForLoop' {
                 if ($PSBoundParameters.ContainsKey('ExitCondition')) {
                     if ((-not ($ExitConditionResult)) -and $i -ge $Iterations -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Executing timeout script block' -f $Name)
                         . $IfTimeoutScript
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Done' -f $Name)
                     }
                     elseif (($ExitConditionResult) -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Executing success script block' -f $Name)
                         . $IfSucceedScript
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Done' -f $Name)
                     }
                 }
                 else {
                     if ($i -ge $Iterations -and $PSBoundParameters.ContainsKey('IfTimeoutScript')) {
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Executing timeout script block' -f $Name)
                         . $IfTimeoutScript
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Done' -f $Name)
+
                     }
                     elseif ($i -lt $Iterations -and $PSBoundParameters.ContainsKey('IfSucceedScript')) {
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Executing success script block' -f $Name)
                         . $IfSucceedScript
+                        Write-Verbose ('New-LoopAction: [{0}] [ForLoop] Done' -f $Name)
                     }
                 }
             }
         }
+        Write-Verbose ('New-LoopAction: [{0}] Finished' -f $Name)
     }
 }
